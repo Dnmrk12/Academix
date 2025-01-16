@@ -1323,7 +1323,7 @@ const CreateEpicPopup = ({ onClose, isEditMode = false, initialData = null, onUp
         iconUrl = await getDownloadURL(storageRef);
       } else {
         iconUrl =
-          "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/Messenger_creation_509387898792656.jpeg?alt=media&token=8122ae8b-95e1-45b4-8a25-a180f6c0ff6f&fbclid=IwY2xjawHIQkxleHRuA2FlbQIxMAABHX0cibeCI97PahwfUeZTcAQIeCon4jAuNEWJALd1rZBsaSN1seKUH704lA_aem_OblAINjigEkiR3VF1nHM-Q";
+          "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Facademixlogo.png?alt=media&token=8f83d11b-3604-41e5-9a46-d1df0d44aed5";
       }
 
       // Prepare new epic data
@@ -1417,7 +1417,7 @@ const CreateEpicPopup = ({ onClose, isEditMode = false, initialData = null, onUp
   };
 
   const [selectedImage, setSelectedImage] = useState(initialData?.icon || null);
-
+  let iconUrl = selectedImage; // Default to the selected image if no new image is uploaded
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {

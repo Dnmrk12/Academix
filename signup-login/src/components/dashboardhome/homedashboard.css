@@ -394,7 +394,7 @@ body {
   border: 2px solid #769FCD;
 }
 
-.overview-card h3 {
+.overview-project-title {
   font-size: 1vw;
   margin-bottom: 5px;
   overflow: hidden;
@@ -402,6 +402,31 @@ body {
   text-overflow: ellipsis;
   color: #2665AC;
 }
+
+.overview-project-title:hover {
+  text-decoration: underline;
+  color: #2665AC;
+  
+}
+
+.overview-title-tooltip {
+	position: absolute;
+	top: 33%; /* Position below the title */
+	background-color: #eff6ff; /* Dark background */
+	color: #2665AC; /* White text */
+	padding: 5px 10px; /* Add spacing */
+	border-radius: 4px; /* Rounded corners */
+	font-size: 14px; /* Tooltip font size */
+	white-space: nowrap; /* Prevent wrapping */
+	z-index: 10; /* Ensure it appears on top */
+	box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Optional shadow */
+  word-wrap: break-word; /* Ensures words break into the next line */
+  white-space: normal; /* Allows multiple lines */
+  line-height: 1.5; /* Adds spacing between lines for readability */
+  text-align: left; /* Keeps text centered */
+  max-width: 50%; /* Ensures it doesn't exceed modal width */
+}
+
 
 .overview-card p {
   font-size: 16px;
@@ -809,22 +834,15 @@ white-space: nowrap;
     left: 755px;
     width: 155%;
     height:350px;
-    max-width: 400px;
+    max-width: 400px; 
+   
   }
 
 
   .recent-messages-container:hover {
-    position: relative;
-    background-color: #F7FBFC;
-    padding: 20px 20px ;
+    
     border: 2px solid #2665AC;
-    border-radius: 12px;
-    box-shadow: 2px 2px 8px grey;
-    bottom: 10px;
-    left: 755px;
-    width: 155%;
-    height:350px;
-    max-width: 400px;
+   
   }
 
 
@@ -977,6 +995,25 @@ white-space: nowrap;
     text-decoration: underline;
     color: #2665AC;
   }
+
+
+.recent-title-tooltip{
+  position: absolute;
+	top: 50%; /* Position below the title */
+	background-color: #eff6ff; /* Dark background */
+	color: #2665AC; /* White text */
+	padding: 5px 10px; /* Add spacing */
+	border-radius: 4px; /* Rounded corners */
+	font-size: 14px; /* Tooltip font size */
+	white-space: nowrap; /* Prevent wrapping */
+	z-index: 1000; /* Ensure it appears on top */
+	box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Optional shadow */
+  word-wrap: break-word; /* Ensures words break into the next line */
+  white-space: normal; /* Allows multiple lines */
+  line-height: 1.5; /* Adds spacing between lines for readability */
+  text-align: left; /* Keeps text centered */
+  max-width: 80%; /* Ensures it doesn't exceed modal width */
+}
 
 
   .message-time{
@@ -2322,9 +2359,14 @@ z-index: 100;
 
 
 .activetaskname{
-  font-size: 15px;
-  font-weight: 600;
-  color:#2665AC;
+  font-weight: bold;
+  color: #2665AC;
+  white-space: nowrap; /* Prevents wrapping to a new line */
+  overflow: hidden; /* Hides the overflowing text */
+  text-overflow: ellipsis; /* Adds '...' at the end of the truncated text */
+  display: block; /* Ensures proper behavior inside flex containers */
+  width:190px;
+  justify-content: space-between;
   cursor: pointer;
 }
 
@@ -2332,6 +2374,29 @@ z-index: 100;
  text-decoration: underline;
   color:#2665AC;
 }
+
+
+
+  
+  .Activetask-title-tooltip {
+    position: absolute;
+    background-color: #eff6ff; /* Dark background */
+    color: #2665AC; /* White text */
+    padding: 5px 10px; /* Add spacing */
+    border-radius: 4px; /* Rounded corners */
+    font-size: 14px; /* Tooltip font size */
+      font-weight: 400;
+    white-space: nowrap; /* Prevent wrapping */
+    z-index: 10; /* Ensure it appears on top */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Optional shadow */
+      word-wrap: break-word; /* Ensures words break into the next line */
+      white-space: normal; /* Allows multiple lines */
+      line-height: 1.5; /* Adds spacing between lines for readability */
+      text-align: left; /* Keeps text centered */
+      max-width: 50%; /* Ensures it doesn't exceed modal width */
+  }
+  
+
 
 .activetaskcon h3{
   position: relative;
@@ -2372,11 +2437,11 @@ z-index: 100;
 
 .activetask-widget-item{
   position: relative;
-  height: 250px; /* Set maximum height for vertical scrolling */
+  height: 230px; /* Set maximum height for vertical scrolling */
   overflow-y: auto; /* Enable vertical scrolling only */
   overflow-x: hidden; /* Disable horizontal scrolling */
   padding-right: 10px; /* Add padding for better aesthetics */
-  bottom:10px;
+  bottom:-10px;
 }
 
 /* Optional: Add a custom scrollbar */
@@ -2463,7 +2528,6 @@ z-index: 100;
 }
 
 
-
 @media screen and (max-width: 1600px){
   body {
     width: 100vw;
@@ -2496,7 +2560,7 @@ z-index: 100;
   #sidebar {
       grid-area: sidebar;
       position: relative;
-      width: 240px;
+      width: 227px;
       height: 160vh;
       background-color: #B9D7EA;
       border-top-right-radius: 50px;
@@ -2525,7 +2589,7 @@ z-index: 100;
     #sidebar {
         grid-area: sidebar;
         position: relative;
-        width: 240px;
+        width: 227px;
         height: 165vh;
         background-color: #B9D7EA;
         border-top-right-radius: 50px;
@@ -2554,7 +2618,7 @@ z-index: 100;
       #sidebar {
           grid-area: sidebar;
           position: relative;
-          width: 240px;
+          width: 227px;
           height: 160%;
           background-color: #B9D7EA;
           border-top-right-radius: 50px;
@@ -2582,7 +2646,7 @@ z-index: 100;
         #sidebar {
             grid-area: sidebar;
             position: relative;
-            width: 240px;
+            width: 227px;
             height: 160%;
             background-color: #B9D7EA;
             border-top-right-radius: 50px;
@@ -2611,7 +2675,7 @@ z-index: 100;
           #sidebar {
               grid-area: sidebar;
               position: relative;
-              width: 240px;
+              width: 227px;
               height: 160%;
               background-color: #B9D7EA;
               border-top-right-radius: 50px;

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Calendar } from "lucide-react";
-import { useNavigate ,useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import guidelinesICON from "./iconshomepage/guidelinesICON.png";
 import img8 from "./iconshomepage/kanbanInstruction.png";
 import img9 from "./iconshomepage/priorityLevel.png";
@@ -62,7 +62,7 @@ const KanbanBoard = () => {
       taskDiv.click();
     }
   }, [tasks]); // Only run when tasks update
- 
+
   useEffect(() => {
     const fetchColumns = async () => {
       try {
@@ -333,10 +333,10 @@ const KanbanBoard = () => {
 
       // Only handle card menu clicks if the epic popup is not showing
       if (!showEpicPopup) {
-        const isCardDotClick = event.target.closest('.remove-btn');
+        const isCardDotClick = event.target.closest(".remove-btn");
         const isOutsideCardMenu = !cardMenuRef.current?.contains(event.target);
-        const isInsideEpicModal = event.target.closest('.epic-modal');
-        
+        const isInsideEpicModal = event.target.closest(".epic-modal");
+
         // Only close the card menu if click is outside and not in epic modal
         if (isOutsideCardMenu && !isCardDotClick && !isInsideEpicModal) {
           setActiveCard(null);
@@ -449,6 +449,9 @@ const KanbanBoard = () => {
     );
   };
 
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const CreateEpicPopup = ({ onClose, isEditMode, projectId }) => {
     const [epicFormData, setEpicFormData] = useState({
       projectName: "",
@@ -540,19 +543,18 @@ const KanbanBoard = () => {
 
     const handleFormSubmit = async (e) => {
       e.preventDefault();
-    
+
       if (!isFormValid()) {
         setShowErrorPopup(true);
         setErrorMessage("Please fill in all required fields.");
         return;
       }
-    
+
       // Disable the button to prevent multiple submissions
       setIsSubmitting(true);
-    
-      let updatedProjectPictureUrl = projectPictureUrl || 'https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/Messenger_creation_509387898792656.jpeg?alt=media&token=8122ae8b-95e1-45b4-8a25-a180f6c0ff6f&fbclid=IwY2xjawHIQkxleHRuA2FlbQIxMAABHX0cibeCI97PahwfUeZTcAQIeCon4jAuNEWJALd1rZBsaSN1seKUH704lA_aem_OblAINjigEkiR3VF1nHM-Q';
 
-    
+      let updatedProjectPictureUrl = projectPictureUrl;
+
       try {
         if (epicFormData.projectPicture) {
           const storage = getStorage();
@@ -561,16 +563,16 @@ const KanbanBoard = () => {
           await uploadBytes(storageRef, epicFormData.projectPicture);
           updatedProjectPictureUrl = await getDownloadURL(storageRef);
         }
-    
+
         const db = getFirestore();
         let epicId = projectId;
-    
+
         if (!isEditMode) {
           epicId = doc(collection(db, "Kanban")).id;
         }
-    
+
         const epicCode = generateEpicCode(epicFormData.projectName);
-    
+
         const notifRef = doc(collection(db, `Kanban/${epicId}/kanbanNotif`));
         const notification = {
           context: epicId,
@@ -581,7 +583,7 @@ const KanbanBoard = () => {
           unread: true,
         };
         await setDoc(notifRef, notification);
-    
+
         if (isEditMode) {
           await updateDoc(doc(db, `Kanban/${projectId}`), {
             epicName: epicFormData.projectName,
@@ -599,7 +601,7 @@ const KanbanBoard = () => {
             epicId: epicId,
             notifId: notifRef.id,
           });
-    
+
           await setDoc(doc(db, `Kanban/${epicId}`), {
             projectId: epicId,
             epicName: epicFormData.projectName,
@@ -615,22 +617,22 @@ const KanbanBoard = () => {
             projectStatus: "To-do",
             epicCode: epicCode,
           });
-    
+
           await setDoc(doc(db, `Kanban/${epicId}/Member`, uid), {
             MemberUid: uid,
             Type: "Kanban Owner",
             Access: true,
           });
-    
+
           await setDoc(doc(db, `Kanban/${epicId}/EpicColumn/p9Gdxwc3hs3tzZIdFDVi`), {
             createdAt: new Date(),
             issueColumn: ["To-do", "In Progress", "Complete"],
           });
         }
-    
+
         setPopupProjectName(epicFormData.projectName);
         setShowSuccessPopup(true);
-    
+
         console.log(`Project ${isEditMode ? "updated" : "saved"} successfully`);
       } catch (error) {
         console.error(`Error ${isEditMode ? "updating" : "saving"} project:`, error);
@@ -664,7 +666,7 @@ const KanbanBoard = () => {
     };
     useEffect(() => {
       const today = new Date();
-      const localDate = today.toLocaleDateString('en-CA'); // 'en-CA' format is YYYY-MM-DD
+      const localDate = today.toLocaleDateString("en-CA"); // 'en-CA' format is YYYY-MM-DD
       if (!epicFormData.startDate) {
         setEpicFormData({
           ...epicFormData,
@@ -704,42 +706,41 @@ const KanbanBoard = () => {
               <div className="epic-form-section">
                 <input type="text" name="projectName" placeholder="Enter Project Name" className="epic-input" value={epicFormData.projectName} onChange={handleInputChange} autoFocus />
                 <DateTimePicker
-  label="Start Date"
-  date={epicFormData.startDate}
-  time={epicFormData.startTime}
-  onDateChange={(date) => {
-    const today = new Date().setHours(0, 0, 0, 0); // Set time to 00:00 for today's date
-    const selectedDate = new Date(date).setHours(0, 0, 0, 0);
-    if (selectedDate >= today) {
-      setEpicFormData({ ...epicFormData, startDate: date });
-    } else {
-      // Optionally show an error message or log it
-      console.log("Cannot select a past date.");
-    }
-  }}
-  onTimeChange={(time) => setEpicFormData({ ...epicFormData, startTime: time })}
-/>
+                  label="Start Date"
+                  date={epicFormData.startDate}
+                  time={epicFormData.startTime}
+                  onDateChange={(date) => {
+                    const today = new Date().setHours(0, 0, 0, 0); // Set time to 00:00 for today's date
+                    const selectedDate = new Date(date).setHours(0, 0, 0, 0);
+                    if (selectedDate >= today) {
+                      setEpicFormData({ ...epicFormData, startDate: date });
+                    } else {
+                      // Optionally show an error message or log it
+                      console.log("Cannot select a past date.");
+                    }
+                  }}
+                  onTimeChange={(time) => setEpicFormData({ ...epicFormData, startTime: time })}
+                />
 
-<DateTimePicker
-  label="End Date"
-  date={epicFormData.endDate}
-  time={epicFormData.endTime}
-  onDateChange={(date) => {
-    // Ensure the end date is not before the start date
-    if (new Date(date) >= new Date(epicFormData.startDate)) {
-      setEpicFormData({ ...epicFormData, endDate: date });
-    } else {
-      // Optionally show an error message or log it
-      console.log("End date cannot be before start date.");
-    }
-  }}
-  onTimeChange={(time) => setEpicFormData({ ...epicFormData, endTime: time })}
-/>
-
+                <DateTimePicker
+                  label="End Date"
+                  date={epicFormData.endDate}
+                  time={epicFormData.endTime}
+                  onDateChange={(date) => {
+                    // Ensure the end date is not before the start date
+                    if (new Date(date) >= new Date(epicFormData.startDate)) {
+                      setEpicFormData({ ...epicFormData, endDate: date });
+                    } else {
+                      // Optionally show an error message or log it
+                      console.log("End date cannot be before start date.");
+                    }
+                  }}
+                  onTimeChange={(time) => setEpicFormData({ ...epicFormData, endTime: time })}
+                />
               </div>
             </form>
             <div className="epic-actions">
-            <button className="epic-action-button" type="button" disabled={isSubmitting} onClick={handleFormSubmit}>
+              <button className="epic-action-button" type="button" disabled={isSubmitting} onClick={handleFormSubmit}>
                 {isEditMode ? "Save Changes" : "Create"}
               </button>
               <button className="epic-action-button" type="button" onClick={onClose}>
@@ -760,10 +761,10 @@ const KanbanBoard = () => {
       e.preventDefault();
       return;
     }
-  
+
     setDraggedTask(task);
-    e.currentTarget.classList.add('dragging');
-    e.dataTransfer.setData('text/plain', ''); // Required for Firefox
+    e.currentTarget.classList.add("dragging");
+    e.dataTransfer.setData("text/plain", ""); // Required for Firefox
   };
 
   const handleDragEnd = (e) => {
@@ -816,6 +817,44 @@ const KanbanBoard = () => {
     }
   };
 
+  const [showCompleteConfirmation, setShowCompleteConfirmation] = useState(false);
+  const [pendingCompleteTask, setPendingCompleteTask] = useState(null);
+  const [pendingDropEvent, setPendingDropEvent] = useState(null);
+
+  const handleCompleteConfirmation = async (confirmed) => {
+    if (confirmed && pendingCompleteTask && pendingDropEvent) {
+      // Proceed with the original drop logic
+      const { e, columnTitle } = pendingDropEvent;
+
+      try {
+        const db = getFirestore();
+        const taskRef = doc(db, "Kanban", pendingCompleteTask.id);
+        const now = new Date().toISOString().split("T")[0];
+
+        // Update the task status
+        await updateDoc(taskRef, {
+          projectStatus: columnTitle,
+          dateDone: now,
+        });
+
+        // Update local state
+        const updatedTasks = tasks.map((task) => (task.id === pendingCompleteTask.id ? { ...task, status: columnTitle, dateDone: now } : task));
+        setTasks(updatedTasks);
+
+        console.log("Task successfully moved to Complete!");
+      } catch (error) {
+        console.error("Error updating task status:", error);
+        setErrorMessage("Failed to move task to Complete. Please try again.");
+        setShowErrorPopup(true);
+      }
+    }
+
+    // Reset pending states
+    setShowCompleteConfirmation(false);
+    setPendingCompleteTask(null);
+    setPendingDropEvent(null);
+  };
+
   const handleDrop = async (e, columnTitle) => {
     e.preventDefault();
     if (!draggedTask) return;
@@ -823,6 +862,20 @@ const KanbanBoard = () => {
 
     console.log("Column Title:", columnTitle);
     console.log("Dragged Task ID:", draggedTask.id);
+
+    // Check if trying to move from Finished to To-do or In Progress
+    if (draggedTask.status === "Finished" && (columnTitle === "To-do" || columnTitle === "In Progress")) {
+        setErrorMessage("Finished projects cannot be moved back to To-do or In Progress. They can only be moved to Complete.");
+        setShowErrorPopup(true);
+        return;
+    }
+
+    // Check if trying to move from Complete to To-do or In Progress
+    if (draggedTask.status === "Complete" && (columnTitle === "To-do" || columnTitle === "In Progress")) {
+        setErrorMessage("Completed projects cannot be moved back to To-do or In Progress. They can only be moved to Finished.");
+        setShowErrorPopup(true);
+        return;
+    }
 
     const column = e.currentTarget;
     const afterElement = getDragAfterElement(column, e.clientY);
@@ -832,50 +885,91 @@ const KanbanBoard = () => {
 
     let newIndex;
     if (afterElement) {
-      const afterTask = columnTasks.find((task) => afterElement.getAttribute("data-task-id") === task.id.toString());
-      newIndex = remainingTasks.findIndex((task) => task.id === afterTask.id);
+        const afterTask = columnTasks.find((task) => afterElement.getAttribute("data-task-id") === task.id.toString());
+        newIndex = remainingTasks.findIndex((task) => task.id === afterTask.id);
     } else {
-      newIndex = remainingTasks.length; // Append to the end if no afterElement
+        newIndex = remainingTasks.length; // Append to the end if no afterElement
+    }
+
+    // Modified Complete column logic to skip confirmation if moving from Finished
+    if (columnTitle === "Complete" && draggedTask.status !== "Finished") {
+        try {
+            const db = getFirestore();
+            const taskSubCollectionRef = collection(db, `Kanban/${draggedTask.id}/kanbanIssue`);
+            const taskQuerySnapshot = await getDocs(taskSubCollectionRef);
+
+            if (taskQuerySnapshot.empty) {
+                setErrorMessage("Cannot move to Complete because there are no issues associated with this task.");
+                setShowErrorPopup(true);
+                return;
+            }
+
+            let allComplete = true;
+            taskQuerySnapshot.forEach((doc) => {
+                const taskData = doc.data();
+                if (taskData.issueStatus !== "Complete" && taskData.issueStatus !== "Finished") {
+                    allComplete = false;
+                }
+            });
+
+            if (!allComplete) {
+                setErrorMessage('All issues must be completed before moving to the "Complete" status.');
+                setShowErrorPopup(true);
+                return;
+            }
+
+            // Show confirmation only if not moving from Finished
+            setPendingCompleteTask(draggedTask);
+            setPendingDropEvent({ e, columnTitle });
+            setShowCompleteConfirmation(true);
+            return;
+        } catch (error) {
+            console.error("Error checking issues status:", error);
+            return;
+        }
     }
 
     // Ensure the task is in "Complete" before moving to "Finished"
     if (columnTitle === "Finished") {
-      if (draggedTask.status !== "Complete") {
-        console.error('Task must be moved to "Complete" before "Finished".');
-        alert('You must move the task to "Complete" before moving it to "Finished".');
-        return;
-      }
+        if (draggedTask.status !== "Complete") {
+            console.error('Task must be moved to "Complete" before "Finished".');
+            setErrorMessage('You must move the task to "Complete" before moving it to "Finished".');
+            setShowErrorPopup(true);
+            return;
+        }
     }
 
     // Check if all issues are complete before moving to "Complete" or "Finished"
-    if (columnTitle === "Complete" || columnTitle === "Finished") {
-      try {
-        const taskSubCollectionRef = collection(db, `Kanban/${draggedTask.id}/kanbanIssue`);
-        const taskQuerySnapshot = await getDocs(taskSubCollectionRef);
+    if ((columnTitle === "Complete" || columnTitle === "Finished") && draggedTask.status !== "Finished") {
+        try {
+            const taskSubCollectionRef = collection(db, `Kanban/${draggedTask.id}/kanbanIssue`);
+            const taskQuerySnapshot = await getDocs(taskSubCollectionRef);
 
-        if (taskQuerySnapshot.empty) {
-          console.error("No issues exist for this task.");
-          alert("Cannot update status because there are no issues associated with this task.");
-          return;
+            if (taskQuerySnapshot.empty) {
+                console.error("No issues exist for this task.");
+                setErrorMessage("Cannot update status because there are no issues associated with this task.");
+                setShowErrorPopup(true);
+                return;
+            }
+
+            let allComplete = true;
+            taskQuerySnapshot.forEach((doc) => {
+                const taskData = doc.data();
+                if (taskData.issueStatus !== "Complete" && taskData.issueStatus !== "Finished") {
+                    allComplete = false;
+                }
+            });
+
+            if (!allComplete) {
+                console.error('Cannot update projectStatus. Not all tasks have issueStatus as "Complete" or "Finished".');
+                setErrorMessage('All issues must be completed before moving to the "Complete" or "Finished" status.');
+                setShowErrorPopup(true);
+                return;
+            }
+        } catch (error) {
+            console.error("Error checking tasks or retrieving issue statuses:", error);
+            return;
         }
-
-        let allComplete = true;
-        taskQuerySnapshot.forEach((doc) => {
-          const taskData = doc.data();
-          if (taskData.issueStatus !== "Complete" && taskData.issueStatus !== "Finished") {
-            allComplete = false; // If any issue is not complete or finished, don't allow the move
-          }
-        });
-
-        if (!allComplete) {
-          console.error('Cannot update projectStatus. Not all tasks have issueStatus as "Complete" or "Finished".');
-          alert('All issues must be completed before moving to the "Complete" or "Finished" status.');
-          return;
-        }
-      } catch (error) {
-        console.error("Error checking tasks or retrieving issue statuses:", error);
-        return;
-      }
     }
 
     // Retrieve the task document to check for admin field
@@ -883,41 +977,40 @@ const KanbanBoard = () => {
     const taskDoc = await getDoc(taskRef);
 
     if (taskDoc.exists()) {
-      const taskData = taskDoc.data();
-      const adminUid = taskData.admin; // Assuming 'admin' field holds the uid of the admin
+        const taskData = taskDoc.data();
+        const adminUid = taskData.admin;
 
-      const auth = getAuth();
-      const currentUserUid = auth.currentUser?.uid; // Get the current logged in user UID from Firebase auth
+        const auth = getAuth();
+        const currentUserUid = auth.currentUser?.uid;
 
-      if (adminUid !== currentUserUid) {
-        console.error("You do not have permission to edit this task.");
-        alert("You do not have permission to move this task.");
-        return;
-      }
+        if (adminUid !== currentUserUid) {
+            console.error("You do not have permission to edit this task.");
+            setErrorMessage("You do not have permission to move this task.");
+            setShowErrorPopup(true);
+            return;
+        }
     } else {
-      console.error("Task document not found in Firestore:", draggedTask.id);
-      return;
+        console.error("Task document not found in Firestore:", draggedTask.id);
+        return;
     }
 
-    // Get the current date in yyyy-mm-dd format
-    const now = new Date().toISOString().split("T")[0]; // Format as yyyy-mm-dd
+    const now = new Date().toISOString().split("T")[0];
 
-    // If all checks pass, proceed to update the task
     const updatedDraggedTask = {
-      ...draggedTask,
-      status: columnTitle,
-      projectStatus: columnTitle,
-      ...(columnTitle === "Complete" && { dateDone: now }), // Only add dateDone if moving to "Complete"
+        ...draggedTask,
+        status: columnTitle,
+        projectStatus: columnTitle,
+        ...(columnTitle === "Complete" && { dateDone: now }),
     };
 
     try {
-      await updateDoc(taskRef, {
-        projectStatus: columnTitle,
-        ...(columnTitle === "Complete" && { dateDone: now }), // Update dateDone field if column is "Complete"
-      });
-      console.log("Firestore update successful!");
+        await updateDoc(taskRef, {
+            projectStatus: columnTitle,
+            ...(columnTitle === "Complete" && { dateDone: now }),
+        });
+        console.log("Firestore update successful!");
     } catch (error) {
-      console.error("Error updating Firestore:", error);
+        console.error("Error updating Firestore:", error);
     }
 
     const updatedTasks = [...remainingTasks.slice(0, newIndex), updatedDraggedTask, ...remainingTasks.slice(newIndex)];
@@ -927,7 +1020,7 @@ const KanbanBoard = () => {
     setDragOverColumn(null);
 
     document.querySelectorAll(".drop-indicator").forEach((el) => el.remove());
-  };
+};
 
   const handleCardClick = (task) => {
     setProjectPicture(task.projectPicture);
@@ -952,7 +1045,7 @@ const KanbanBoard = () => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
-    tasks.forEach(task => {
+    tasks.forEach((task) => {
       if (cardRefs.current[task.id]) {
         const element = cardRefs.current[task.id];
         const isOverflow = element.offsetWidth < element.scrollWidth;
@@ -984,11 +1077,10 @@ const KanbanBoard = () => {
             </div>
           )}
         </div>
-     
-          <button className="create-epic-btn" onClick={() => setShowEpicPopup(true)}>
-            Create Epic
-          </button>
-    
+
+        <button className="create-epic-btn" onClick={() => setShowEpicPopup(true)}>
+          Create Epic
+        </button>
       </div>
 
       {showGuidelines && (
@@ -1097,29 +1189,25 @@ const KanbanBoard = () => {
                     >
                       <div className="card-header flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <img src={task.projectPicture || img18} alt="notification icon" className="project-name-icon" />
+                          <img src={task.projectPicture || "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Facademixlogo.png?alt=media&token=8f83d11b-3604-41e5-9a46-d1df0d44aed5"} alt="notification icon" className="project-name-icon" />
                           <div className="title-container">
-                          <h4 
-  ref={(el) => (cardRefs.current[task.id] = el)}
-  className="task-title"
-  onMouseEnter={() => {
-    if (cardRefs.current[task.id]?.dataset.isOverflowing === 'true') {
-      setHoveredCardId(task.id);
-      setShowTooltip(true);
-    }
-  }}
-  onMouseLeave={() => {
-    setHoveredCardId(null);
-    setShowTooltip(false);
-  }}
->
-  {task.title}
-  {hoveredCardId === task.id && showTooltip && (
-    <div className="title-tooltip">
-      {task.title}
-    </div>
-  )}
-</h4>
+                            <h4
+                              ref={(el) => (cardRefs.current[task.id] = el)}
+                              className="task-title"
+                              onMouseEnter={() => {
+                                if (cardRefs.current[task.id]?.dataset.isOverflowing === "true") {
+                                  setHoveredCardId(task.id);
+                                  setShowTooltip(true);
+                                }
+                              }}
+                              onMouseLeave={() => {
+                                setHoveredCardId(null);
+                                setShowTooltip(false);
+                              }}
+                            >
+                              {task.title}
+                              {hoveredCardId === task.id && showTooltip && <div className="title-tooltip">{task.title}</div>}
+                            </h4>
                             {task.endDate && (
                               <div className="kanban-epic-tooltip-container">
                                 <img src={getIconBasedOnDeadline(task.startDate, task.endDate, task.status, task.dateDone)} alt="Deadline Status" className="overdue-icon" />
@@ -1178,7 +1266,6 @@ const KanbanBoard = () => {
                                 )}
                               </div>
                             ))}
-                            {task.assignees.length === 3 && <div className="assignee-count">+1</div>}
                             {task.assignees.length > 3 && <div className="extra-count">+{task.assignees.length - 3}</div>}
                           </div>
                         </div>
@@ -1190,6 +1277,34 @@ const KanbanBoard = () => {
           </React.Fragment>
         ))}
       </div>
+
+      {showCompleteConfirmation && (
+        <div className="confirmation-modal">
+          <div className="confirmation-content">
+            <h3 className="confirmation-content-title">Are you sure you want to move {pendingCompleteTask?.title} to Complete state?</h3>
+            <div className="confirmation-actions">
+              <button className="confirm-btn" onClick={() => handleCompleteConfirmation(true)}>
+                Yes
+              </button>
+              <button className="no-btn" onClick={() => handleCompleteConfirmation(false)}>
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showErrorPopup && (
+        <div className="kanban-invite-popup-overlay">
+          <div className="kanban-invite-popup-modal">
+            <img src={errorPopup} alt="Error" className="kanban-invite-popup-icon" />
+            <p className="kanban-invite-popup-error-message">{errorMessage}</p>
+            <button className="kanban-invite-popup-error-button" onClick={() => setShowErrorPopup(false)}>
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {showConfirmation && (
         <div className="confirmation-modal">

@@ -154,7 +154,59 @@ const [popupMessage, setPopupMessage] = useState("");
   };
 
 
-
+  const [showRemovalSuccessPopup, setShowRemovalSuccessPopup] = useState(false);
+  const [showRemovalErrorPopup, setShowRemovalErrorPopup] = useState(false);
+  const [removalErrorMessage, setRemovalErrorMessage] = useState("");
+  const [removalSuccessMessage, setRemovalSuccessMessage] = useState("");
+  
+  
+  
+  
+  const handleConfirmRemoveSprint = async () => {
+      if (selectedActSprintMember) {
+        try {
+          const { memberId } = selectedActSprintMember;
+          const uid = auth.currentUser.uid; // Get current user's UID
+    
+          // 1. Delete `users/${memberId}/Scrum/${scrumId}`
+          const userScrumDocRef = doc(db, `users/${memberId}/Scrum/${scrumId}`);
+          await deleteDoc(userScrumDocRef);
+    
+          // 2. Loop through `Scrum/${scrumId}/backlog` and remove `assignee.assignId` matching `uid`
+          const backlogCollectionRef = collection(db, `Scrum/${scrumId}/backlog`);
+          const backlogDocs = await getDocs(backlogCollectionRef);
+    
+          backlogDocs.forEach(async (docSnapshot) => {
+            const backlogData = docSnapshot.data();
+            // Check if assignee.assignId matches the memberId (or UID in this case)
+            if (backlogData.assignee && backlogData.assignee.assignId === memberId) {
+              const backlogDocRef = doc(db, `Scrum/${scrumId}/backlog/${docSnapshot.id}`);
+              // Nullify all the values inside assignee
+              await updateDoc(backlogDocRef, {
+                assignee: null, // Set the entire assignee field to null
+              });
+            }
+          });
+    
+          // 3. Delete `Scrum/${scrumId}/member/${memberId}`
+          const scrumMemberDocRef = doc(db, `Scrum/${scrumId}/member/${memberId}`);
+          await deleteDoc(scrumMemberDocRef);
+    
+          // Remove member locally from the state and update localStorage
+          handleRemoveMember(selectedActSprintMember);
+    
+          setRemovalSuccessMessage(`${selectedActSprintMember?.name} successfully removed from the team.`);
+          setShowRemovalSuccessPopup(true);
+          console.log(`Member ${memberId} successfully removed.`);
+          setShowRemoveActSprintPopup(false); // Hide the popup
+        } catch (error) {
+          setRemovalErrorMessage("Failed to remove member from the team. Please try again.");
+          setShowRemovalErrorPopup(true);
+          console.error("Error removing member:", error);
+        }
+      }
+    };
+  
 
   
   const [hoveredActSprintMember, setHoveredActSprintMember] = useState(null);
@@ -431,7 +483,8 @@ const [popupMessage, setPopupMessage] = useState("");
         }
       } catch (error) {
         console.error("Error updating issue status in Firestore:", error);
-        alert("Failed to update the issue status. Please try again.");
+        setShowErrorPopup(true);
+        setPopupMessage("Failed to update the issue status. Please try again.");
       }
     }
     
@@ -2064,22 +2117,56 @@ const [isDeletingComment, setIsDeletingComment] = useState(false);
   
 
   const handleFinalSprintCompletion = async () => {
-    const { projectName, key, startDate, startTime, endDate, endTime, icon, scrumMaster, masterIcon, members } = location.state || {};
-
+    const {
+      projectName,
+      key,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      icon,
+      scrumMaster,
+      masterIcon,
+      members,
+    } = location.state || {};
+  
+    // Get the current user's UID
+    const auth = getAuth();
+    const uid = auth.currentUser?.uid;
+  
     if (!scrumId) {
       console.error("Scrum ID is missing!");
       return;
     }
-
+  
     try {
       // Reference the Firestore document for the specific Scrum project
       const scrumDocRef = doc(db, `Scrum/${scrumId}`);
-
+  
       // Update the document with `isDone: true`
       await updateDoc(scrumDocRef, { isDone: true });
-
+  
       console.log("Scrum status updated to isDone: true in Firestore!");
-
+  
+      // Update each member's access in Firestore
+      if (members && members.length > 0) {
+        const memberUpdates = members.map(async (memberUid) => {
+          const memberDocRef = doc(db, `Scrum/${scrumId}/member/${memberUid}`);
+          await updateDoc(memberDocRef, { access: false });
+          console.log(`Access set to false for member: ${memberUid}`);
+        });
+  
+        // Wait for all member updates to complete
+        await Promise.all(memberUpdates);
+      }
+  
+      // Specifically update the current user's access if needed
+      if (uid) {
+        const currentUserDocRef = doc(db, `Scrum/${scrumId}/member/${uid}`);
+        await updateDoc(currentUserDocRef, { access: false });
+        console.log(`Access set to false for current user: ${uid}`);
+      }
+  
       // Navigate back to Scrum Projects and pass the project completion data
       navigate("/scrumprojects", {
         state: {
@@ -2099,12 +2186,13 @@ const [isDeletingComment, setIsDeletingComment] = useState(false);
           },
         },
       });
-
+  
       console.log("Sprint completed successfully!");
     } catch (error) {
       console.error("Error updating Scrum project in Firestore:", error);
     }
   };
+  
   const handleCancelSprintCompletion = () => {
     setIsSprintCompletionPopupOpen(false);
     setRemainingIssues([]);
@@ -2277,7 +2365,28 @@ const [isDeletingComment, setIsDeletingComment] = useState(false);
         console.error("Error inviting member:", error);
       });
   };
-  
+  const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    const fetchIsDone = async () => {
+      try {
+        const db = getFirestore();
+        const docRef = doc(db, `Scrum/${scrumId}`);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setIsDone(data.isDone === true);
+        }
+      } catch (error) {
+        console.error("Error fetching isDone status:", error);
+      }
+    };
+
+    if (scrumId) {
+      fetchIsDone();
+    }
+  }, [scrumId]);
    const [hasAccess, setHasAccess] = useState(false);
    
    useEffect(() => {
@@ -3676,77 +3785,79 @@ useEffect(() => {
                 </div>
 
                 <div className="active-sprint-presentation-popup__comment-section">
-                  <div
-                    className="active-sprint-presentation-popup__comment-input"
-                    style={{
-                      marginBottom: "16px",
-                      display: "flex",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    {masterIcon ? (
-                      <img
-                        src={userPicture}
-                        alt={scrumMaster}
-                        className="active-sprint-presentation-popup__user-avatar"
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          marginRight: "8px",
-                          borderRadius: "50%",
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className="active-sprint-presentation-popup__user-avatar"
-                        style={{
-                          backgroundColor: "#2665AC",
-                          color: "white",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "50%",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          flexShrink: 0,
-                          marginRight: "8px",
-                        }}
-                      >
-                        {scrumMaster.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <input
-                      type="text"
-                      placeholder="Add a comment"
-                      className="active-sprint-presentation-popup__comment-field"
-                      value={newComment}
-                      onChange={handleCommentChange}
-                      onKeyPress={handleCommentSubmit}
-                    />
-                    {newComment.trim() && (
-                      <button
-                        onClick={handleCommentSubmit}
-                        disabled={isSubmittingComment}
-                        style={{
-                          padding: "8px 12px",
-                          backgroundColor: "#2665AC",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: isSubmittingComment ? "not-allowed" : "pointer",
-                          opacity: isSubmittingComment ? 0.7 : 1,
-                          fontSize: "12px",
-                          transition: "background-color 0.3s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1976d2")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2665AC")}
-                      >
-                        {isSubmittingComment ? "Sending..." : "Send"}
-                      </button>
-                    )}
-                  </div>
+                {!isDone && (
+        <div
+          className="active-sprint-presentation-popup__comment-input"
+          style={{
+            marginBottom: "16px",
+            display: "flex",
+            alignItems: "flex-start",
+          }}
+        >
+          {masterIcon ? (
+            <img
+              src={userPicture}
+              alt={scrumMaster}
+              className="active-sprint-presentation-popup__user-avatar"
+              style={{
+                width: "32px",
+                height: "32px",
+                marginRight: "8px",
+                borderRadius: "50%",
+              }}
+            />
+          ) : (
+            <div
+              className="active-sprint-presentation-popup__user-avatar"
+              style={{
+                backgroundColor: "#2665AC",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                fontSize: "14px",
+                fontWeight: "500",
+                flexShrink: 0,
+                marginRight: "8px",
+              }}
+            >
+              {scrumMaster.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <input
+            type="text"
+            placeholder="Add a comment"
+            className="active-sprint-presentation-popup__comment-field"
+            value={newComment}
+            onChange={handleCommentChange}
+            onKeyPress={handleCommentSubmit}
+          />
+          {newComment.trim() && (
+            <button
+              onClick={handleCommentSubmit}
+              disabled={isSubmittingComment}
+              style={{
+                padding: "8px 12px",
+                backgroundColor: "#2665AC",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: isSubmittingComment ? "not-allowed" : "pointer",
+                opacity: isSubmittingComment ? 0.7 : 1,
+                fontSize: "12px",
+                transition: "background-color 0.3s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1976d2")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2665AC")}
+            >
+              {isSubmittingComment ? "Sending..." : "Send"}
+            </button>
+          )}
+        </div>
+      )}
 
                   <div
                     className="active-sprint-presentation-popup__comment-list"
@@ -3808,7 +3919,7 @@ useEffect(() => {
                         img: comment.avatar
                     })}>{comment.author}</span>
     <span className="active-sprint-presentation-popup__comment-time">{comment.timestamp}</span>
-    {comment.authorId === uid && ( // Check if the logged-in user is the author
+    {!isDone && comment.authorId === uid && ( // Check if the logged-in user is the author
       <Trash2
         size={16}
         color="#2665AC"
@@ -4053,12 +4164,49 @@ useEffect(() => {
             </p>
           </div>
           <div className="remove-popup-actions-actsprint">
-            <button onClick={handleConfirmRemove}>Yes</button>
+            <button onClick={handleConfirmRemoveSprint}>Yes</button>
             <button onClick={handleCancelRemove}>No</button>
           </div>
         </div>
       </div>
     )}
+
+
+
+{/* Removal Success Popup */}
+{showRemovalSuccessPopup && (
+    <div className="sprint-remove-popup-overlay">
+      <div className="sprint-remove-popup-modal">
+        <img src={successPopup} alt="Success" className="sprint-remove-popup-icon" />
+        <p className="sprint-remove-popup-message">{removalSuccessMessage}</p>
+        <button 
+          className="sprint-remove-popup-button" 
+          onClick={() => setShowRemovalSuccessPopup(false)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )}
+
+  {/* Removal Error Popup */}
+  {showRemovalErrorPopup && (
+    <div className="sprint-remove-popup-overlay">
+      <div className="sprint-remove-popup-modal">
+        <img src={errorPopup} alt="Error" className="sprint-remove-popup-icon" />
+        <p className="sprint-remove-popup-error-message">{removalErrorMessage}</p>
+        <button 
+          className="sprint-remove-popup-error-button" 
+          onClick={() => setShowRemovalErrorPopup(false)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )}
+
+
+
         </div>
       )}
 

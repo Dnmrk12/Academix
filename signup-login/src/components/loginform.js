@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'; 
-import { getFirestore, doc, getDoc } from 'firebase/firestore'; 
+import { getFirestore, doc, getDoc,setDoc} from 'firebase/firestore'; 
 import './loginform.css';
 import img1 from './dycimages/googleicon.png';
 import successPopup from "./dashboardhome/iconshomepage/successPopup.png";
@@ -99,19 +99,31 @@ const LoginForm = () => {
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-    
+            
+            // Check if user already exists in Firestore
             const userDocRef = doc(db, 'users', user.uid);
             const userDoc = await getDoc(userDocRef);
-    
+            
             if (userDoc.exists()) {
+                // User exists, proceed to login
                 const userData = userDoc.data();
                 localStorage.setItem('firstName', userData.firstName);
                 localStorage.setItem('userPicture', userData.userPicture);
-                startCountdownAndNavigate();
+                startCountdownAndNavigate();  // Navigate to the dashboard after login
             } else {
-                setErrorMessage("User does not exist in Firestore. Please sign up first.");
-                setShowErrorPopup(true);
-                setIsLoading(false);
+                // User doesn't exist, create a new document
+                await setDoc(userDocRef, {
+                    firstName: user.displayName.split(' ')[0].toUpperCase(),
+                    lastName: user.displayName.split(' ')[1]?.toUpperCase() || '',
+                    email: user.email,
+                    uid: user.uid,
+                    userPicture: user.photoURL ||"https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Fdefaultpic.png?alt=media&token=d6fcd468-c496-4c72-a83e-142290ce2cd5"
+                });
+                
+                // Log the user in after registration
+                localStorage.setItem('firstName', user.displayName.split(' ')[0].toUpperCase());
+                localStorage.setItem('userPicture', user.photoURL || "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Fdefaultpic.png?alt=media&token=d6fcd468-c496-4c72-a83e-142290ce2cd5");
+                startCountdownAndNavigate();  // Navigate to the dashboard after registration
             }
         } catch (error) {
             setErrorMessage('Error logging in with Google: ' + error.message);
@@ -119,6 +131,7 @@ const LoginForm = () => {
             setIsLoading(false);
         }
     };
+    
 
     return (
         <div className="formwrapper">
@@ -189,7 +202,7 @@ const LoginForm = () => {
                         </i>
                     </div>
 
-                    <div>
+                   {/* <div>
                         <input 
                             type="checkbox" 
                             id="keeplogin" 
@@ -199,6 +212,7 @@ const LoginForm = () => {
                         />
                         <label htmlFor="keeplogin" className="keeplogcheck"> Keep me logged in</label>
                     </div>
+                    */}
 
                     <Link to="/forgotpassword" className="forgotlink">Forgot Password?</Link>
 

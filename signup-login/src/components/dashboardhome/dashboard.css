@@ -20,21 +20,12 @@
 }*/
 
 
-.sidebar-list-item.disabled {
-    pointer-events: none;
-    opacity: 0.5;
-  }
   
   .reportTab{
     text-decoration-line: none;  /* Ensure no underline */
     color: #2665AC;
     font-weight: 700;
     font-size: 12px;
-    padding: 5px;
-   /* position: relative;
-    left:1px;*/
-    display: flex;
-    align-items: center;
 
 }
 
@@ -47,12 +38,13 @@
     place-self: center;
     position: absolute;
     z-index: 1000;
-    left: 1px;
+    left: -5px;
     top:-16px;
+    
   }
   
   .reports-dropdown li {
-    margin: 5px 0;
+    margin:  0;
   }
   
   .reports-dropdown li a {
@@ -60,11 +52,10 @@
     color: #2665AC;
     font-weight: 700;
     font-size: 12px;
-    padding: 5px;
-    padding-right:12px;
-    padding-left:12px;
+    padding: 5px 0;
+    padding-left:1.4em;
     position: relative;
-    right:20px;
+    right:11px;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -73,7 +64,7 @@
   .reports-dropdown li a:hover {
     background-color: #D6E6F2; /* Change background color on hover */
     border-radius: 5px; /* Add some rounding for hover effect */
-    
+   
 }
 
   
@@ -107,7 +98,7 @@
 #sidebar {
     grid-area: sidebar;
     position: relative;
-    width: 240px;
+    width: 227px;
     height: 165vh;
     background-color: #B9D7EA;
     border-top-right-radius: 50px;
@@ -148,6 +139,7 @@
     top: 50px;
     border-radius: 10px;
     font-size: 7px;
+    white-space: nowrap;
 }
 
 .sidebar-list-item:hover {
@@ -260,7 +252,7 @@
     #sidebar {
         grid-area: sidebar;
         position: absolute;
-        width: 240px;
+        width: 227px;
         height: 160%;
         background-color: #B9D7EA;
         border-top-right-radius: 50px;
@@ -303,6 +295,29 @@
         background-color: #D6E6F2;
         cursor: pointer;
     }
+
+
+
+    .reports-dropdown li a {
+        text-decoration: none;
+        color: #2665AC;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 5px 0;
+        padding-right:1px;
+        padding-left:2.3em;
+        position: relative;
+        right:23px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+      }
+    
+      .reports-dropdown li a:hover {
+        background-color: #D6E6F2; /* Change background color on hover */
+        border-radius: 5px; /* Add some rounding for hover effect */
+       
+    }
     
     .sidebar-list-item > a {
         text-decoration: none;
@@ -332,18 +347,6 @@
   }
     
 
-    .reportTab{
-        text-decoration-line: none;  /* Ensure no underline */
-        color: #2665AC;
-        font-weight: 700;
-        font-size: 12px;
-        padding: 5px;
-        display: flex;
-        align-items: center;
-    position: relative;
-    /*left:50px;
-    top:-1px;*/
-    }
 
     
     .dashboardbrand{

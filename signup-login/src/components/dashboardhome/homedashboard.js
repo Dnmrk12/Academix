@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate ,Link } from 'react-router-dom'; // Import useNavigate
 import { useLocation } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
@@ -610,6 +610,7 @@ const fetchData = async (period, isCompared = false) => {
  
  useEffect(() => {
   const fetchTasks = async () => {
+    const defaultImage = 'https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Facademixlogo.png?alt=media&token=8f83d11b-3604-41e5-9a46-d1df0d44aed5';
     const kanbanCollectionRef = collection(db, 'Kanban');
     const kanbanQuery = query(kanbanCollectionRef);
     
@@ -656,7 +657,7 @@ const fetchData = async (period, isCompared = false) => {
               time: timeAgo(timestamp), // Use the timeAgo function to show relative time
               timestamp: timestamp.getTime(), // Save the timestamp as JavaScript timestamp for internal use
               epicId: epicId,
-              img: projectPicture || 'path/to/default/image.png', // Include the projectPicture or fallback
+               img: projectPicture || defaultImage, // Set the default image if no projectPicture exists
               type: issueData.issueType?.toLowerCase() || 'unknown', // Default type to 'unknown'
             });
           }
@@ -1847,6 +1848,74 @@ const getIconSrc = (type) => {
   }
 };
 
+
+
+
+const [tooltipStatesOverview, setTooltipStatesOverview] = useState({});
+const titleOverviewRefs = useRef({});
+
+// Add this useEffect to check for text overflow
+useEffect(() => {
+  // Check each title element for overflow
+  Object.keys(titleOverviewRefs.current).forEach(projectId => {
+    const element = titleOverviewRefs.current[projectId];
+    if (element) {
+      const isOverflow = element.offsetWidth < element.scrollWidth;
+      setTooltipStatesOverview(prev => ({
+        ...prev,
+        [projectId]: {
+          isOverflowing: isOverflow,
+          showTooltip: false
+        }
+      }));
+    }
+  });
+}, [projects]);
+
+
+const [tooltipStatesRecent, setTooltipStatesRecent] = useState({});
+const titleRecentRefs = useRef({});
+
+// Add this useEffect to check for text overflow
+useEffect(() => {
+  // Check each title element for overflow
+  Object.keys(titleRecentRefs.current).forEach(scrumId => {
+    const element = titleRecentRefs.current[scrumId];
+    if (element) {
+      const isOverflow = element.offsetWidth < element.scrollWidth;
+      setTooltipStatesRecent(prev => ({
+        ...prev,
+        [scrumId]: {
+          isOverflowing: isOverflow,
+          showTooltip: false
+        }
+      }));
+    }
+  });
+}, [projects]);
+
+
+const [tooltipStatesActiveTask, setTooltipStatesActiveTask] = useState({});
+const titleActiveTaskRefs = useRef({});
+
+// Add this useEffect to check for text overflow
+useEffect(() => {
+  // Check each title element for overflow
+  Object.keys(titleActiveTaskRefs.current).forEach(epicId => {
+    const element = titleActiveTaskRefs.current[epicId];
+    if (element) {
+      const isOverflow = element.offsetWidth < element.scrollWidth;
+      setTooltipStatesActiveTask(prev => ({
+        ...prev,
+        [epicId]: {
+          isOverflowing: isOverflow,
+          showTooltip: false
+        }
+      }));
+    }
+  });
+}, [projects]);
+
   return (
     
     <main className="main-container">
@@ -2149,7 +2218,34 @@ const getIconSrc = (type) => {
         className="overview-card"
         style={{ textDecoration: 'none', cursor: 'pointer' }}
       >
-        <h3>{project.title}</h3>
+        <h3 className='overview-project-title' 
+        
+        ref={el => titleOverviewRefs.current[project.id] = el}
+           onMouseEnter={() => {
+             if (tooltipStatesOverview[project.id]?.isOverflowing) {
+               setTooltipStatesOverview(prev => ({
+                 ...prev,
+                 [project.id]: {
+                   ...prev[project.id],
+                   showTooltip: true
+                 }
+               }));
+             }
+           }}
+           onMouseLeave={() => {
+             setTooltipStatesOverview(prev => ({
+               ...prev,
+               [project.id]: {
+                 ...prev[project.id],
+                 showTooltip: false
+               }
+             }));
+           }}
+         >
+           {project.title}
+           {tooltipStatesOverview[project.id]?.showTooltip && (
+             <div className="overview-title-tooltip">{project.title}</div>
+           )}</h3>
         <p>Project Progress: {project.progress}%</p>
         <progress value={project.progress} max="100" className="progress-bar"></progress>
         <div className="assignees">
@@ -2242,12 +2338,36 @@ const getIconSrc = (type) => {
             <img src={msg.icon} alt="Project Icon" />
           </div>
           <div className="message-details">
-            <div
+          <div
               className="message-title"
               onClick={() => handleTitleClick(msg.scrumId)}
               style={{ cursor: "pointer" }}
+             ref={el => titleRecentRefs.current[msg.scrumId] = el}
+                onMouseEnter={() => {
+                  if (tooltipStatesRecent[msg.scrumId]?.isOverflowing) {
+                    setTooltipStatesRecent(prev => ({
+                      ...prev,
+                      [msg.scrumId]: {
+                        ...prev[msg.scrumId],
+                        showTooltip: true
+                      }
+                    }));
+                  }
+                }}
+                onMouseLeave={() => {
+                  setTooltipStatesRecent(prev => ({
+                    ...prev,
+                    [msg.scrumId]: {
+                      ...prev[msg.scrumId],
+                      showTooltip: false
+                    }
+                  }));
+                }}
             >
-              <span>{msg.title}</span>
+              {msg.title}
+              {tooltipStatesRecent[msg.scrumId]?.showTooltip && (
+      <div className="recent-title-tooltip">{msg.title}</div>
+    )}
               {msg.unreadCount > 0 && (
                 <span className="unread-badge">+{msg.unreadCount}</span>
               )}
@@ -2448,7 +2568,7 @@ const getIconSrc = (type) => {
       <div key={task.id} className="activetask-item">
         <img src={task.img} alt="Avatar" className="activetaskavatar" />
         <div className="activetask-details">
-          <h4
+        <h4
             className="activetaskname"
             onClick={async () => {
               const taskType = await getTaskType(task.epicId, db);
@@ -2464,8 +2584,31 @@ const getIconSrc = (type) => {
                 console.log("Task not found in Kanban or Scrum");
               }
             }}
-          >
+            ref={el => titleActiveTaskRefs.current[task.title] = el}
+            onMouseEnter={() => {
+              if (tooltipStatesActiveTask[task.title]?.isOverflowing) {
+                setTooltipStatesActiveTask(prev => ({
+                  ...prev,
+                  [task.title]: {
+                    ...prev[task.title],
+                    showTooltip: true
+                  }
+                }));
+              }
+            }}
+            onMouseLeave={() => {
+              setTooltipStatesActiveTask(prev => ({
+                ...prev,
+                [task.title]: {
+                  ...prev[task.title],
+                  showTooltip: false
+                }
+              }));
+            }}>
             {task.title}
+            {tooltipStatesActiveTask[task.title]?.showTooltip && (
+      <div className="Activetask-title-tooltip">{task.title}</div>
+    )}
           </h4>
           <p>
             <img src={getIconSrc(task.type)} alt="" className="credentialsicon" />

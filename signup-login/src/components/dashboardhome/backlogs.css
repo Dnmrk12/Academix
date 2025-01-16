@@ -2237,3 +2237,144 @@ transition: background-color 0.2s;
 .backlog-invite-popup-error-button:hover {
   background-color: #912121;
 }
+
+
+/* success and error popup for create issue */
+.backlog-issue-popup-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.1);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+  
+.backlog-issue-popup-modal {
+	background: white;
+	border-radius: 12px;
+	padding: 24px;
+	text-align: center;
+	max-width: 400px;
+	width: 100%;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+  
+.backlog-issue-popup-icon {
+	width: 80px;
+	height: 80px;
+	margin-bottom: 16px;
+}
+  
+.backlog-issue-popup-message {
+	margin-bottom: 20px;
+	font-size: 16px;
+	color: #25AE88;
+}
+  
+.backlog-issue-popup-button {
+	background-color: #25AE88;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+  
+.backlog-issue-popup-button:hover {
+	background-color: #1D8C6E;
+}
+  
+.backlog-issue-popup-error-message {
+	margin-bottom: 20px;
+	font-size: 16px;
+	color: #AE2525;
+}
+  
+.backlog-issue-popup-error-button {
+	background-color: #AE2525;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+  
+.backlog-issue-popup-error-button:hover {
+	background-color: #912121;
+}
+
+/* remove success and error popup */
+.backlog-remove-popup-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.2);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+.backlog-remove-popup-modal {
+	background: white;
+	border-radius: 12px;
+	padding: 24px;
+	text-align: center;
+	max-width: 400px;
+	width: 100%;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.backlog-remove-popup-icon {
+	width: 80px;
+	height: 80px;
+	margin-bottom: 16px;
+}
+
+.backlog-remove-popup-message {
+	margin-bottom: 20px;
+	font-size: 16px;
+	color: #25AE88;
+}
+
+.backlog-remove-popup-button {
+	background-color: #25AE88;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.backlog-remove-popup-button:hover {
+	background-color: #1D8C6E;
+}
+
+.backlog-remove-popup-error-message {
+	margin-bottom: 20px;
+	font-size: 16px;
+	color: #AE2525;
+}
+
+.backlog-remove-popup-error-button {
+	background-color: #AE2525;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.backlog-remove-popup-error-button:hover {
+	background-color: #912121;
+}

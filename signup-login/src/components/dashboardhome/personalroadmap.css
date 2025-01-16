@@ -672,15 +672,45 @@ filter: brightness(0) saturate(100%) invert(42%) sepia(71%) saturate(1356%) hue-
   overflow: hidden; /* Clips any overflowing content */
 }
 
-.projectName{
-position: relative;
-bottom:-1px;
-left:10px;
-font-size: 1em;
-word-break: break-word;
-width:350px;
-padding:0;
+
+/* Project Name Styling */
+.projectName {
+  position: relative;
+  bottom: -1px;
+  left: 10px;
+  font-size: 1em;
+  word-break: break-word;
+  width: 350px;
+  padding: 0;
+  z-index: 10; /* Ensure title text has a higher z-index */
+  overflow: visible; /* Allow overflow for the tooltip */
 }
+/* Tooltip Styling */
+.projectName-tooltip {
+  visibility: hidden; /* Initially hidden */
+  position: absolute;
+  bottom: 100%; /* Position above the element */
+  left: 0;
+  background-color: #eff6ff;
+  color: #2665AC;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  white-space: normal;
+  line-height: 1.5;
+  text-align: left;
+  max-width: 350px;
+  z-index: 9999;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  transform: translateY(-10px); /* Adjusted to move the tooltip above */
+}
+
+.projectName:hover .projectName-tooltip {
+  visibility: visible; /* Make tooltip visible on hover */
+}
+
 
 
 .dropdown-toggle-epic {
@@ -1399,7 +1429,7 @@ color:#2665AC;
   object-fit: contain; /* Maintains aspect ratio */
 }
 
-.project-issue-name{
+.project-issue-name {
   flex: 1;
   max-width: 160px; /* Allows text to truncate */
   white-space: nowrap;
@@ -1408,6 +1438,40 @@ color:#2665AC;
   margin-right: 12px;
   font-size: 1em;
 }
+
+/* Tooltip Styling for Project Issue Name */
+.project-issue-name-tooltip {
+  visibility: hidden; /* Initially hidden */
+  position: absolute;
+  top: 100%; /* Position below the element */
+  left: 0;
+  background-color: #eff6ff;
+  color: #2665AC;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  white-space: normal; /* Ensures the text inside the tooltip wraps */
+  line-height: 1.5;
+  text-align: left;
+  max-width: none; /* Removes any width limitation */
+  z-index: 9999;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  transform: translateY(10px); /* Adjusted to move tooltip below */
+}
+
+/* Hover effect to show tooltip */
+.project-issue-name:hover .project-issue-name-tooltip {
+  visibility: visible; /* Make tooltip visible on hover */
+}
+
+
+
+
+
+
+/* Make the span relative so the tooltip positions correctly */
 
 .effort-badge{
   position: relative;
@@ -1805,17 +1869,45 @@ color:#2665AC;
   }
 
 
-
-.subtask-name{
-  flex: 1;
-  max-width: 130px; /* Allows text to truncate */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-left: 105px;
-  margin-bottom:5px;
-  font-size: .9em;
-}
+  .subtask-name {
+    flex: 1;
+    max-width: 130px; /* Allows text to truncate */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 105px;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+  
+  }
+  
+  /* Tooltip Styling for Subtask Name */
+  .subtask-name-tooltip {
+    visibility: hidden; /* Initially hidden */
+    position: absolute;
+    top: 100%; /* Position below the element */
+    left: 0;
+    background-color: #eff6ff;
+    color: #2665AC;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 400;
+    white-space: normal; /* Ensures text wraps if needed */
+    line-height: 1.5;
+    text-align: left;
+    max-width: none; /* Removes any width limitation */
+    z-index: 9999;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    transform: translateY(10px); /* Moves the tooltip down */
+  }
+  
+  /* Hover effect to show tooltip */
+  .subtask-name:hover .subtask-name-tooltip {
+    visibility: visible; /* Make tooltip visible on hover */
+  }
+  
 
 
 .status-subtask-dropdown{

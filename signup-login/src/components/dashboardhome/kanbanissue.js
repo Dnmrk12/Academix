@@ -59,6 +59,7 @@ const KanbanIssue = () => {
   const [selectedEpicId, setSelectedEpicId] = useState(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState("");
   const [hoveredTask, setHoveredTask] = useState(null);
   const [subtaskCount, setSubtaskCount] = useState("");
   const [activeCard, setActiveCard] = useState(null);
@@ -93,6 +94,7 @@ const KanbanIssue = () => {
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState("Story");
   const [showTypeFilterDropdown, setShowTypeFilterDropdown] = useState(false);
+  const [projectStatus, setProjectStatus] = useState("");
   const [selectedFilters, setSelectedFilters] = useState({ onlyMyIssue: false });
   const [selectedTypeFilters, setSelectedTypeFilters] = useState({ story: false, task: false, bug: false });
   const auth = getAuth();
@@ -101,6 +103,11 @@ const KanbanIssue = () => {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [showRemovalSuccessPopup, setShowRemovalSuccessPopup] = useState(false);
+const [showRemovalErrorPopup, setShowRemovalErrorPopup] = useState(false);
+const [removalErrorMessage, setRemovalErrorMessage] = useState("");
+const [removalSuccessMessage, setRemovalSuccessMessage] = useState("");
 
   // Separate useEffect for epicName
   useEffect(() => {
@@ -251,13 +258,13 @@ const KanbanIssue = () => {
   const handleRemoveMember = async (member) => {
     try {
       const currentEpicId = epicId || location.state?.epicId;
-
+  
       const userKanbanDocRef = doc(db, `users/${member.memberId}/Kanban/${currentEpicId}`);
       await deleteDoc(userKanbanDocRef);
-
+  
       const kanbanIssuesRef = collection(db, `Kanban/${currentEpicId}/kanbanIssue`);
       const kanbanIssuesSnapshot = await getDocs(kanbanIssuesRef);
-
+  
       const updatePromises = kanbanIssuesSnapshot.docs.map(async (issueDoc) => {
         const issueData = issueDoc.data();
         if (issueData.assignId === member.memberId) {
@@ -265,16 +272,20 @@ const KanbanIssue = () => {
           return updateDoc(issueDocRef, { assignId: null });
         }
       });
-
+  
       await Promise.all(updatePromises);
-
+  
       const epicMemberDocRef = doc(db, `Kanban/${currentEpicId}/Member/${member.memberId}`);
       await deleteDoc(epicMemberDocRef);
-
+  
       setMembers((prevMembers) => prevMembers.filter((m) => m.memberId !== member.memberId));
+      setRemovalSuccessMessage(`${member.firstName} ${member.lastName} successfully removed from the team.`);
+      setShowRemovalSuccessPopup(true);
       console.log("Member removed successfully");
     } catch (error) {
       console.error("Error removing member:", error);
+      setRemovalErrorMessage("Failed to remove member from the team. Please try again.");
+      setShowRemovalErrorPopup(true);
     }
   };
 
@@ -325,7 +336,7 @@ const KanbanIssue = () => {
                   <span className="member-role">{member.role}</span>
                 </div>
 
-                {showRemoveIcon(member, index) && (
+                {showRemoveIcon(member, index) && projectStatus !== "Complete" && (
                   <img
                     src={RemoveMemberIcon}
                     alt="Remove Member"
@@ -362,6 +373,7 @@ const KanbanIssue = () => {
       </div>
     );
   };
+
 
   const InviteMemberPopup = ({ onClose }) => {
     const [showMemberDetails, setShowMemberDetails] = useState(false);
@@ -620,6 +632,25 @@ const KanbanIssue = () => {
     fetchSubtasks();
   }, [selectedEpicId, issueId]); // Only re-fetch when these values change
 
+  const fetchProjectStatus = async () => {
+    if (!selectedEpicId) return;
+    
+    try {
+      const epicDoc = await getDoc(doc(db, `Kanban/${selectedEpicId}`));
+      if (epicDoc.exists()) {
+        setProjectStatus(epicDoc.data().projectStatus || "");
+      }
+    } catch (error) {
+      console.error("Error fetching project status:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedEpicId) {
+      fetchProjectStatus();
+    }
+  }, [selectedEpicId]);
+
   const PresentationSlidePopup = ({ onClose, subtasks: initialSubtasks, subtaskCount: initialSubtaskCount, onSubtasksUpdate }) => {
     const typeChangeRef = useRef(null);
     const statusChangeRef = useRef(null);
@@ -824,7 +855,7 @@ const KanbanIssue = () => {
     const TypeIcon = ({ type, size, onClick }) => {
       const typeOption = typeOptions.find((option) => option.id === type);
       return typeOption ? (
-        <span className={`${typeOption.color}`} style={{ fontSize: size, cursor: isAdmin ? "pointer" : "default" }} onClick={onClick}>
+        <span className={`${typeOption.color}`} style={{ fontSize: size, cursor: projectStatus !== "Complete" && isAdmin ? "pointer" : "default" }} onClick={onClick}>
           {typeOption.icon}
         </span>
       ) : null;
@@ -1831,9 +1862,9 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
           <div className="presentation-popup__header">
             <div className="presentation-popup__title-group">
               <div className="presentation-popup__title-wrapper">
-                <img src={projectPicture || img18} alt="Presentation icon" className="presentation-popup__icon" />
+                <img src={projectPicture || "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Facademixlogo.png?alt=media&token=8f83d11b-3604-41e5-9a46-d1df0d44aed5"} alt="Presentation icon" className="presentation-popup__icon" />
                 <div className="presentation-popup__title-container" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  {isEditingTitle && isAdmin ? (
+                  {isEditingTitle && projectStatus !== "Complete" && isAdmin ? (
                     <input
                       type="text"
                       className="presentation-popup__title-edit"
@@ -1880,7 +1911,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                   <img src={img22} alt="Subtask" className="w-6 h-6 rounded-full" style={{ width: "14px" }} />
                   <span>{subtaskCount}</span>
                   {/* Type Dropdown */}
-                  {isTypeDropdownOpen && isAdmin && (
+                  {isTypeDropdownOpen && isAdmin && projectStatus !== "Complete" && (
                     <div
                       ref={typeChangeRef}
                       style={{
@@ -1921,7 +1952,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                   )}
                 </span>
                 <div className="presentation-popup__status-dropdown">
-                  {isAdmin && (
+                  {isAdmin && projectStatus !== "Complete" && (
                     <button className="presentation-popup__status-btn" onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}>
                       <span style={{ flexGrow: "1", textAlign: "center" }}>{selectedStatus}</span>
                       <ChevronDown
@@ -1958,13 +1989,14 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                   padding: "4px",
                   borderRadius: "4px",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: projectStatus === "Complete" ? "default" : "pointer",
                   background: "transparent",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
                 onClick={handlePinClick}
+                disabled={projectStatus === "Complete"}
               >
                 <Pin
                   size={20}
@@ -1976,12 +2008,16 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                     color: isFavorite ? "#ED8A19" : "#2563eb",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.fill = "#ED8A19";
-                    e.currentTarget.style.color = "#ED8A19";
+                    if (projectStatus !== "Complete") {
+                      e.currentTarget.style.fill = "#ED8A19";
+                      e.currentTarget.style.color = "#ED8A19";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.fill = isFavorite ? "#ED8A19" : "none";
-                    e.currentTarget.style.color = isFavorite ? "#ED8A19" : "#2563eb";
+                    if (projectStatus !== "Complete") {
+                      e.currentTarget.style.fill = isFavorite ? "#ED8A19" : "none";
+                      e.currentTarget.style.color = isFavorite ? "#ED8A19" : "#2563eb";
+                    }
                   }}
                 />
               </button>
@@ -1995,7 +2031,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
           <div className="presentation-popup__content">
             <div className="presentation-popup__section_description">
               <h3 className="presentation-popup__section-description">Description</h3>
-              {isEditingDescription && isAdmin ? (
+              {isEditingDescription && projectStatus !== "Complete" && isAdmin ? (
                 <input
                   type="text"
                   className="presentation-popup__description"
@@ -2023,7 +2059,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
             <div className="presentation-popup__section_subtask">
               <div className="presentation-popup__subtask-header">
                 <h3 className="presentation-popup__section-subtask">Subtasks</h3>
-                {isAdmin && (
+                {isAdmin && projectStatus !== "Complete" && (
                   <button className="presentation-popup__create-btn" onClick={handleCreateSubtask}>
                     + Create Subtask
                   </button>
@@ -2096,7 +2132,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                           <span className="presentation-popup__subtask-title" onDoubleClick={() => handleEditSubtask(subtask)}>
                             {subtask.title}
                           </span>
-                          {isAdmin && (
+                          {isAdmin && projectStatus !== "Complete" && (
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <Pencil
                                 size={16}
@@ -2218,7 +2254,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                         gap: "8px",
                       }}
                     >
-                      {isAdmin ? (
+                      {projectStatus !== "Complete" && isAdmin ? (
                         <input
                           type="text"
                           inputMode="numeric"
@@ -2251,18 +2287,18 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                   <span className="presentation-popup__detail-label">Priority</span>
                   <div className="presentation-popup__user priority-dropdown" style={{ position: "relative" }}>
                     <div
-                      onClick={() => isAdmin && setShowPriorityDropdown(!showPriorityDropdown)}
+                      onClick={() => isAdmin && projectStatus !== "Complete" && setShowPriorityDropdown(!showPriorityDropdown)}
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        cursor: isAdmin ? "pointer" : "default",
+                        cursor: projectStatus !== "Complete" && isAdmin ? "pointer" : "default",
                         gap: "8px",
                         color: "#2665AC",
                       }}
                     >
                       <img src={getPriorityIcon(priority)} alt={`${priority} priority`} />
                       <span style={{ textTransform: "capitalize" }}>{priority}</span>
-                      {isAdmin && (
+                      {isAdmin && projectStatus !== "Complete" && (
                         <ChevronDown
                           size={14}
                           style={{
@@ -2273,7 +2309,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                       )}
                     </div>
 
-                    {isAdmin && showPriorityDropdown && (
+                    {isAdmin && projectStatus !== "Complete" && showPriorityDropdown && (
                       <div
                         ref={priorityChangeRef}
                         style={{
@@ -2321,11 +2357,11 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                   <div className="presentation-popup__user assignee-dropdown" style={{ position: "relative" }}>
                     <div
                       className="presentation-popup__user-toggle"
-                      onClick={() => isAdmin && setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}
+                      onClick={() => isAdmin && projectStatus !== "Complete" && setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        cursor: isAdmin ? "pointer" : "default",
+                        cursor: projectStatus !== "Complete" && isAdmin ? "pointer" : "default",
                         gap: "8px",
                       }}
                     >
@@ -2353,7 +2389,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                       <span className="presentation-popup__user-name">{selectedAssignee.name}</span>
                     </div>
 
-                    {isAssigneeDropdownOpen && isAdmin && (
+                    {isAssigneeDropdownOpen && isAdmin && projectStatus !== "Complete" && (
                       <div
                         ref={assigneeChangeRef}
                         className="presentation-popup__assignee-list"
@@ -2559,6 +2595,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
               </div>
 
               <div className="presentation-popup__comment-section">
+              {projectStatus !== "Complete" && (
                 <div
                   className="presentation-popup__comment-input"
                   style={{
@@ -2613,6 +2650,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
   }}
 />
                 </div>
+              )}
 
                 <div
                   className="presentation-popup__comment-list"
@@ -2682,7 +2720,7 @@ const [showPopupTitleTooltip, setShowPopupTitleTooltip] = useState(false);
                               {comment.author}
                             </span>
                             <span className="presentation-popup__comment-time">{comment.timestamp}</span>
-                            {comment.authorId === uid && isAdmin && ( // Only show the trash icon if assignId matches uid
+                            {comment.authorId === uid && isAdmin && projectStatus !== "Complete" && ( // Only show the trash icon if assignId matches uid
                               <Trash2 size={16} color="#2665AC" style={{ cursor: "pointer", marginLeft: "8px" }} onClick={() => handleDeleteClick(comment.id)} />
                             )}
                           </div>
@@ -3199,6 +3237,18 @@ const handleAddColumn = (columnTitle) => {
     fetchUserName();
   }, []);
 
+  const getUserId = () => {
+    const auth = getAuth();
+    return auth.currentUser ? auth.currentUser.uid : null;
+  };
+  
+  useEffect(() => {
+    const userId = getUserId();
+    if (userId) {
+      setUserId(userId);
+    }
+  }, []);
+  
   const getPriorityArrows = (priority) => {
     let priorityImage;
     switch (priority) {
@@ -3394,7 +3444,7 @@ const handleAddColumn = (columnTitle) => {
 
   const handleDragStart = (e, task) => {
     // Simple check for admin status
-    if (!isAdmin) {
+    if (!isAdmin || projectStatus === "Complete") {
       e.preventDefault();
       return;
     }
@@ -3496,13 +3546,15 @@ const handleAddColumn = (columnTitle) => {
         const currentUserUid = auth.currentUser.uid;
         if (epicData.admin !== currentUserUid) {
           console.error("User is not the admin of this Epic.");
-          alert("You do not have permission to move tasks in this Epic.");
+          setShowErrorPopup(true);
+          setErrorMessage("You do not have permission to move tasks in this Epic.");
           return;
         }
 
         if (epicData.projectStatus === "To-do") {
           console.error('Cannot update issueStatus because Epic projectStatus is "To-do".');
-          alert('Task cannot be moved because the Epic is in "To-do" status.');
+          setShowErrorPopup(true);
+          setErrorMessage('Task cannot be moved because the Epic is in "To-do" status.');
           return;
         }
 
@@ -3705,6 +3757,7 @@ const handleAddColumn = (columnTitle) => {
           favorite: false,
           assignee: null,
           userPictureComment: userPictureComment,
+          projectPicture: projectPicture,
         },
       ]);
   
@@ -3820,7 +3873,7 @@ const handleAddColumn = (columnTitle) => {
             marginBottom: "30px",
           }}
         >
-          {hasAccess && isAdmin && (
+          {hasAccess && isAdmin && projectStatus !== "Complete" && (
             <button className="invite-member-btn" onClick={() => setShowInviteMemberPopup(true)}>
               <Users size={20} />
               Invite Member
@@ -3886,7 +3939,7 @@ const handleAddColumn = (columnTitle) => {
               <div className="kanban-issue-header">
                 <h3 className="kanban-issue-column-title">{columnTitle}</h3>
 
-                {isAdmin && (
+                {isAdmin && projectStatus !== "Complete" && (
                   <div className="flex items-center gap-2">
                     {columnTitle !== "Complete" && !showColumnInput && (
   <div
@@ -3945,7 +3998,7 @@ const handleAddColumn = (columnTitle) => {
                 {tasks
                   .filter((task) => {
                     const statusMatch = task.status === columnTitle;
-                    const assigneeMatch = !selectedFilters.onlyMyIssue || (task.assignee && task.assignee.name === userName);
+                    const assigneeMatch = !selectedFilters.onlyMyIssue || (task.assignee && task.assignee.id === userId);
                     const typeFiltersSelected = Object.values(selectedTypeFilters).some((value) => value);
                     const typeMatch = !typeFiltersSelected || selectedTypeFilters[task.type.toLowerCase()] === true;
 
@@ -3962,7 +4015,7 @@ const handleAddColumn = (columnTitle) => {
                     <div
                       key={task.id}
                       data-task-id={task.id}
-                      className={`kanban-card ${activeCard === task.id ? "active" : ""} ${task.favorite ? "favorite" : ""} ${!isAdmin ? "non-draggable" : ""} `}
+                      className={`kanban-card ${activeCard === task.id ? "active" : ""} ${task.favorite ? "favorite" : ""} ${(!isAdmin || projectStatus === "Complete") ? "non-draggable" : ""}`}
                       onMouseEnter={() => handleCardHover(task)}
                       onMouseLeave={() => setHoveredTask(null)}
                       onClick={() => handleCardClick(task)}
@@ -3990,7 +4043,7 @@ const handleAddColumn = (columnTitle) => {
               <div className="issue-title-tooltip">{task.title}</div>
             )}
           </h4>
-                        {isAdmin && (
+                        {isAdmin && projectStatus !== "Complete" && (
                           <button
                             className="remove-btn"
                             onClick={(e) => {
@@ -4228,7 +4281,7 @@ const handleAddColumn = (columnTitle) => {
                       </div>
                     )}
 
-                    {isAdmin && (
+                    {isAdmin && projectStatus !== "Complete" && (
                       <button
                         ref={createIssueButtonRef}
                         className="create-issue-btn"
@@ -4291,6 +4344,38 @@ const handleAddColumn = (columnTitle) => {
                 </div>
               </div>
             )}
+
+            {/* Removal Success Popup */}
+  {showRemovalSuccessPopup && (
+    <div className="kanban-remove-popup-overlay">
+      <div className="kanban-remove-popup-modal">
+        <img src={successPopup} alt="Success" className="kanban-remove-popup-icon" />
+        <p className="kanban-remove-popup-message">{removalSuccessMessage}</p>
+        <button 
+          className="kanban-remove-popup-button" 
+          onClick={() => setShowRemovalSuccessPopup(false)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )}
+
+  {/* Removal Error Popup */}
+  {showRemovalErrorPopup && (
+    <div className="kanban-remove-popup-overlay">
+      <div className="kanban-remove-popup-modal">
+        <img src={errorPopup} alt="Error" className="kanban-remove-popup-icon" />
+        <p className="kanban-remove-popup-error-message">{removalErrorMessage}</p>
+        <button 
+          className="kanban-remove-popup-error-button" 
+          onClick={() => setShowRemovalErrorPopup(false)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )}
 
             {showColumnDeleteConfirmation && (
               <div className="confirmation-modal">

@@ -184,6 +184,7 @@ const navigationMemberId = navigationState.memberId;
       <div className="profile-header">
         <div className="profile-img-container">
           <img src={profileImg} alt="Profile" className="profile-image" />
+          {!edit && (
           <div className="hover-overlay">
             <label htmlFor="file-upload" className="upload-label">
               <img src={cameraIcon} className="camera-icon" alt="Upload Icon" />
@@ -198,6 +199,7 @@ const navigationMemberId = navigationState.memberId;
               style={{ display: "none" }}
             />
           </div>
+          )}
         </div>
       </div>
 
@@ -207,7 +209,7 @@ const navigationMemberId = navigationState.memberId;
         onClick={() => setEditableField('name')}
         className='profile-user-name'
       >
-        {editableField === 'name' ? (
+        {editableField === 'name' && !edit ? (
           <div>
             <input
             disabled ={edit}
@@ -263,7 +265,7 @@ const navigationMemberId = navigationState.memberId;
                           value
                         )
                       )}
-                      {field !== 'email' && (
+                      {field !== 'email' && !edit && (
                         <a
                           href="#"
                           className="edit"

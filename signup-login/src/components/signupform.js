@@ -74,7 +74,7 @@ const Signupform = () => {
                 lastName: lastName.toUpperCase(),
                 email: email,
                 uid: user.uid,
-                userPicture: "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/received_611513854553082.png?alt=media&token=2c2a0f36-8902-4dd6-b10f-f1d2c996f1b5"
+                userPicture: "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Fdefaultpic.png?alt=media&token=d6fcd468-c496-4c72-a83e-142290ce2cd5"
             });
     
             setSuccessMessage("Account created successfully! Please verify your email.");
@@ -171,14 +171,17 @@ const Signupform = () => {
                         <path fill="#F7FBFC" fillOpacity="1" d="M0,0L48,48C96,96,192,192,288,197.3C384,203,480,117,576,69.3C672,21,768,11,864,58.7C960,107,1056,213,1152,250.7C1248,288,1344,256,1392,240L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
                     </svg>
                     <h1 className="titleform">Create an Account</h1>
-
+                 {/* 
                     <div className="sociallogin">
                         <img src={img1} alt="Google Icon" className="socialicon" />
                         <button type="button" className="socialbutton" onClick={handleGoogleSignup}>Sign up with Google</button>
                     </div>
 
                     <p className="separator panghati"><span className="nameseparate">OR SIGN UP WITH Email</span></p>
+*/}
 
+
+                   
                     <div className="inputname">
                         <input
                             type="text"

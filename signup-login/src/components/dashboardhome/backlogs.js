@@ -438,7 +438,8 @@ const [users, setUsers] = useState(
   
     } catch (error) {
       console.error("Error updating sprint details in Firestore:", error);
-      alert("Failed to update sprint details. Please try again.");
+      setShowErrorPopup(true);
+      setErrorMessage("Failed to update sprint details. Please try again.");
     }
   };
 
@@ -1590,7 +1591,8 @@ const confirmDeleteSubtask = async () => {
       console.log("Subtask deleted successfully!");
     } catch (error) {
       console.error("Error deleting subtask in Firestore:", error);
-      alert("Failed to delete subtask. Please try again.");
+      setShowErrorPopup(true);
+      setErrorMessage("Failed to delete subtask. Please try again.");
     } finally {
       setIsDeletingSubtask(false);
     }
@@ -1641,7 +1643,8 @@ const confirmDeleteSubtask = async () => {
         console.log("Subtask updated successfully!");
       } catch (error) {
         console.error("Error updating subtask in Firestore:", error);
-        alert("Failed to update subtask. Please try again.");
+        setShowErrorPopup(true);
+        setErrorMessage("Failed to update subtask. Please try again.");
       }
     }
   };
@@ -2633,6 +2636,28 @@ const handleInviteClick = () => {
       console.error("Error inviting member:", error);
     });
 };
+const [isDone, setIsDone] = useState(false);
+
+useEffect(() => {
+  const fetchIsDone = async () => {
+    try {
+      const db = getFirestore();
+      const docRef = doc(db, `Scrum/${scrumId}`);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setIsDone(data.isDone === true);
+      }
+    } catch (error) {
+      console.error("Error fetching isDone status:", error);
+    }
+  };
+
+  if (scrumId) {
+    fetchIsDone();
+  }
+}, [scrumId]);
 const [hasAccess, setHasAccess] = useState(false);
 
 useEffect(() => {
@@ -2680,7 +2705,57 @@ const handleDisable = () => {
 
   };
 
-
+  const [showRemovalSuccessPopup, setShowRemovalSuccessPopup] = useState(false);
+  const [showRemovalErrorPopup, setShowRemovalErrorPopup] = useState(false);
+  const [removalErrorMessage, setRemovalErrorMessage] = useState("");
+  const [removalSuccessMessage, setRemovalSuccessMessage] = useState("");
+  
+  
+  
+  const handleConfirmRemovebacklog = async () => {
+      if (selectedScrumMember) {
+        try {
+          const { memberId } = selectedScrumMember;
+    
+          // 1. Delete `users/${memberId}/Scrum/${scrumId}`
+          const userScrumDocRef = doc(db, `users/${memberId}/Scrum/${scrumId}`);
+          await deleteDoc(userScrumDocRef);
+    
+          // 2. Loop through `Scrum/${scrumId}/backlog` and remove `assignee.assignId` matching `memberId`
+          const backlogCollectionRef = collection(db, `Scrum/${scrumId}/backlog`);
+          const backlogDocs = await getDocs(backlogCollectionRef);
+    
+          backlogDocs.forEach(async (docSnapshot) => {
+            const backlogData = docSnapshot.data();
+            // Check if assignee.assignId matches the memberId
+            if (backlogData.assignee && backlogData.assignee.assignId === memberId) {
+              const backlogDocRef = doc(db, `Scrum/${scrumId}/backlog/${docSnapshot.id}`);
+              // Nullify all the fields inside assignee
+              await updateDoc(backlogDocRef, {
+                assignee: null, // Set assignee field to null
+              });
+            }
+          });
+    
+          // 3. Delete `Scrum/${scrumId}/member/${memberId}`
+          const scrumMemberDocRef = doc(db, `Scrum/${scrumId}/member/${memberId}`);
+          await deleteDoc(scrumMemberDocRef);
+    
+          // 4. Remove the member locally from the state and update localStorage
+          handleRemoveMember(selectedScrumMember); // Remove member locally
+          setShowRemoveScrumPopup(false); // Hide confirmation popup
+    
+          setRemovalSuccessMessage(`${selectedScrumMember?.name} successfully removed from the team.`);
+          setShowRemovalSuccessPopup(true);
+          console.log(`Member ${memberId} successfully removed.`);
+        } catch (error) {
+          setRemovalErrorMessage("Failed to remove member from the team. Please try again.");
+          setShowRemovalErrorPopup(true);
+          console.error("Error removing member:", error);
+        }
+      }
+    };
+  
 
   
 
@@ -3417,12 +3492,48 @@ const handleDisable = () => {
             </p>
           </div>
           <div className="remove-popup-actions-scrum">
-            <button onClick={handleConfirmRemove}>Yes</button>
+            <button onClick={handleConfirmRemovebacklog}>Yes</button>
             <button onClick={handleCancelRemove}>No</button>
           </div>
         </div>
       </div>
     )}
+
+
+{/* Removal Success Popup */}
+{showRemovalSuccessPopup && (
+    <div className="backlog-remove-popup-overlay">
+      <div className="backlog-remove-popup-modal">
+        <img src={successPopup} alt="Success" className="backlog-remove-popup-icon" />
+        <p className="backlog-remove-popup-message">{removalSuccessMessage}</p>
+        <button 
+          className="backlog-remove-popup-button" 
+          onClick={() => setShowRemovalSuccessPopup(false)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )}
+
+  {/* Removal Error Popup */}
+  {showRemovalErrorPopup && (
+    <div className="backlog-remove-popup-overlay">
+      <div className="backlog-remove-popup-modal">
+        <img src={errorPopup} alt="Error" className="backlog-remove-popup-icon" />
+        <p className="backlog-remove-popup-error-message">{removalErrorMessage}</p>
+        <button 
+          className="backlog-remove-popup-error-button" 
+          onClick={() => setShowRemovalErrorPopup(false)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  )}
+
+
+
             </div>
           )}
 
@@ -3543,6 +3654,7 @@ const handleDisable = () => {
   />
   <span>{subtasksCount}</span>
 </span>
+
 </div>
 </div>
 
@@ -4139,76 +4251,79 @@ const handleDisable = () => {
                     </div>
 
                     <div className="backlog-presentation-popup__comment-section">
-                      <div
-                        className="backlog-presentation-popup__comment-input"
-                        style={{
-                          marginBottom: "16px",
-                          display: "flex",
-                          alignItems: "flex-start",
-                        }}
-                      >
-                        {masterIcon ? (
-                          <img
-                            src={userPicture}
-                            alt={''}
-                            className="backlog-presentation-popup__user-avatar"
-                            style={{
-                              width: "32px",
-                              height: "32px",
-                              marginRight: "8px",
-                              borderRadius: "50%",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            className="backlog-presentation-popup__user-avatar"
-                            style={{
-                              backgroundColor: "#2665AC",
-                              color: "white",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: "32px",
-                              height: "32px",
-                              borderRadius: "50%",
-                              fontSize: "14px",
-                              fontWeight: "500",
-                              marginRight: "8px",
-                            }}
-                          >
-                            {scrumMaster.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <input
-                          type="text"
-                          placeholder="Add a comment"
-                          className="backlog-presentation-popup__comment-field"
-                          value={newComment}
-                          onChange={handleCommentChange}
-                          onKeyPress={handleCommentSubmit}
-                        />
-                        {newComment.trim() && (
-                          <button
-                            onClick={handleCommentSubmit}
-                            disabled={isSubmittingComment}
-                            style={{
-                              padding: "8px 12px",
-                              backgroundColor: "#2665AC",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: isSubmittingComment ? "not-allowed" : "pointer",
-                              opacity: isSubmittingComment ? 0.7 : 1,
-                              fontSize: "12px",
-                              transition: "background-color 0.3s",
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1976d2")}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2665AC")}
-                          >
-                            {isSubmittingComment ? "Sending..." : "Send"}
-                          </button>
-                        )}
-                      </div>
+                    {!isDone && (
+  <div
+    className="backlog-presentation-popup__comment-input"
+    style={{
+      marginBottom: "16px",
+      display: "flex",
+      alignItems: "flex-start",
+    }}
+  >
+    {masterIcon ? (
+      <img
+        src={userPicture}
+        alt={""}
+        className="backlog-presentation-popup__user-avatar"
+        style={{
+          width: "32px",
+          height: "32px",
+          marginRight: "8px",
+          borderRadius: "50%",
+        }}
+      />
+    ) : (
+      <div
+        className="backlog-presentation-popup__user-avatar"
+        style={{
+          backgroundColor: "#2665AC",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "32px",
+          height: "32px",
+          borderRadius: "50%",
+          fontSize: "14px",
+          fontWeight: "500",
+          marginRight: "8px",
+        }}
+      >
+        {scrumMaster.charAt(0).toUpperCase()}
+      </div>
+    )}
+    <input
+      type="text"
+      placeholder="Add a comment"
+      className="backlog-presentation-popup__comment-field"
+      value={newComment}
+      onChange={handleCommentChange}
+      onKeyPress={handleCommentSubmit}
+    />
+    {newComment.trim() && (
+      <button
+        onClick={handleCommentSubmit}
+        disabled={isSubmittingComment}
+        style={{
+          padding: "8px 12px",
+          backgroundColor: "#2665AC",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          cursor: isSubmittingComment ? "not-allowed" : "pointer",
+          opacity: isSubmittingComment ? 0.7 : 1,
+          fontSize: "12px",
+          transition: "background-color 0.3s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1976d2")}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2665AC")}
+      >
+        {isSubmittingComment ? "Sending..." : "Send"}
+      </button>
+    )}
+  </div>
+)}
+
 
                       <div
                         className="backlog-presentation-popup__comment-list"
@@ -4271,20 +4386,21 @@ const handleDisable = () => {
                         img: comment.avatar
                     })}>{comment.author}</span>
     <span className="backlog-presentation-popup__comment-time">{comment.timestamp}</span>
-    {comment.authorId === uid && ( // Check if the current user is the author
-      <Trash2
-        size={16}
-        color="#2665AC"
-        style={{
-          cursor: "pointer",
-          opacity: 0.7,
-          transition: "opacity 0.3s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.7)}
-        onClick={() => handleDeleteComment(comment.id)}
-      />
-    )}
+    {!isDone && comment.authorId === uid && (
+  <Trash2
+    size={16}
+    color="#2665AC"
+    style={{
+      cursor: "pointer",
+      opacity: 0.7,
+      transition: "opacity 0.3s",
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+    onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.7)}
+    onClick={() => handleDeleteComment(comment.id)}
+  />
+)}
+
   </div>
   <p className="backlog-presentation-popup__comment-text">{comment.content}</p>
 </div>

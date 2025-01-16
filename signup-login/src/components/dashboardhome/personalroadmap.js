@@ -36,6 +36,8 @@ function PersonalRoadmap()
  // const [isDropdownEpicOpen, setIsDropdownEpicOpen] = useState(false);
   const [dropdownVisibleRow, setDropdownVisibleRow] = useState(null);
   const [showEpicPopupPersonalRoadmap, setShowEpicPopupPersonalRoadmap] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [hoveredRowId, setHoveredRowId] = useState(null);  
 //  const [visibleDropdownId, setVisibleDropdownId] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [startDate, setStartDate] = useState(null);
@@ -177,8 +179,8 @@ const handleFileUpload = (e) => {
     const formatDate = (date) => (date ? date.toISOString().split('T')[0] : null);
     const formattedStartDate = formatDate(startDate);
     const formattedEndDate = formatDate(endDate);
-  
-    let iconUrl = null;
+  const defaultImageUrl = "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Facademixlogo.png?alt=media&token=8f83d11b-3604-41e5-9a46-d1df0d44aed5";
+    let iconUrl = defaultImageUrl;
     if (epicFormData.icon) {
       const timestamp = new Date().getTime();
       const storage = getStorage();
@@ -209,7 +211,7 @@ const handleFileUpload = (e) => {
   
       const newRow = {
         id: newId,
-        icon: iconUrl || "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/Messenger_creation_509387898792656.jpeg?alt=media&token=8122ae8b-95e1-45b4-8a25-a180f6c0ff6f&fbclid=IwY2xjawHIQkxleHRuA2FlbQIxMAABHX0cibeCI97PahwfUeZTcAQIeCon4jAuNEWJALd1rZBsaSN1seKUH704lA_aem_OblAINjigEkiR3VF1nHM-Q",
+        icon: iconUrl || "https://firebasestorage.googleapis.com/v0/b/dyci-academix.appspot.com/o/wagdelete%2Facademixlogo.png?alt=media&token=8f83d11b-3604-41e5-9a46-d1df0d44aed5",
         projectName,
         startDate: formattedStartDate || "No Start Date Selected",
         endDate: formattedEndDate || "No End Date Selected",
@@ -1505,9 +1507,19 @@ const handleCreateSubtask = async (epicId) => {
     );
   
     try {
-      // Update the subtask in Firestore
+      // Update local state first for real-time feedback
+      setSubtasks((prev) => {
+        const updatedSubtasks = { ...prev };
+        updatedSubtasks[subtaskKey][editingSubtaskIndex] = {
+          ...subtask,
+          name: subtaskName, // Update the name in the local state
+        };
+        return updatedSubtasks;
+      });
+  
+      // Update Firestore asynchronously
       await updateDoc(subtaskRef, {
-        name: subtaskName, // You can add more fields if necessary
+        name: subtaskName,
       });
   
       console.log("Subtask updated in Firestore successfully.");
@@ -1936,12 +1948,34 @@ const DateTimePicker = ({ label, date, time, onDateChange, onTimeChange }) => {
               )}
 
               {/* Project Name */}
-              <span
-                className={`projectName ${row.isPinned ? "highlight" : ""}`}
-                style={{ marginRight: "10px" }}
-              >
-                {row.projectName}
-              </span>
+<span
+  key={row.id}
+  className={`projectName ${row.isPinned ? "highlight" : ""}`}
+  style={{ marginRight: "10px" }}
+  onMouseEnter={() => {
+    if (row.projectName.length > 30) {
+      setHoveredRowId(row.id); 
+      setShowTooltip(true);  // Ensure tooltip is shown
+    }
+  }}
+  onMouseLeave={() => {
+    setHoveredRowId(null); 
+    setShowTooltip(false);  // Hide tooltip
+  }}
+>
+  {row.projectName.length > 30
+    ? `${row.projectName.substring(0, 27)}...`
+    : row.projectName}
+  {hoveredRowId === row.id && showTooltip && (
+    <div className="projectName-tooltip">
+      {row.projectName}
+    </div>
+  )}
+</span>
+
+
+
+
 
               {isApproachingDeadline(row.endDate) && (
                  <div className="tooltip-container">
@@ -2059,9 +2093,13 @@ const DateTimePicker = ({ label, date, time, onDateChange, onTimeChange }) => {
                           alt=""
                           className="issue-icon"
                         />
-                        <span className="project-issue-name">
-                          {issue.projectIssueName}
-                        </span>
+                      <span className="project-issue-name">
+  {issue.projectIssueName}
+  <span className="project-issue-name-tooltip">
+    {issue.projectIssueName} {/* Or the text you want to show in the tooltip */}
+  </span>
+</span>
+
                         <span className="effort-badge">{issue.effort}</span>
 
                         <select
@@ -2131,7 +2169,13 @@ const DateTimePicker = ({ label, date, time, onDateChange, onTimeChange }) => {
                           {(subtasks[`${row.id}-${issueIndex}`] || []).map(
                             (subtask, subtaskIndex) => (
                               <div key={subtaskIndex} className="subtask-item">
-                                <span className="subtask-name">{subtask.name}</span>
+                              <span className="subtask-name">
+  {subtask.name}
+  <span className="subtask-name-tooltip">
+    {subtask.name} {/* Or the text you want to show in the tooltip */}
+  </span>
+</span>
+
                                 <select
                                   className={`status-subtask-dropdown ${subtask.status.replace(
                                     /\s+/g,
@@ -2665,21 +2709,25 @@ const DateTimePicker = ({ label, date, time, onDateChange, onTimeChange }) => {
                 
                     <DateTimePicker
   label="Start Date"
-  date={startDate ? startDate.toISOString().split('T')[0] : ''} // Format date for input
+  date={startDate ? startDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]} // Default to today's date if no start date
   time={startTime} // Pass the start time to display
   onDateChange={(dateString) => {
     const date = new Date(dateString); // Convert string to Date object
-    if (!isNaN(date)) {
+    const today = new Date();
+    
+    // Allow selecting the current date or any future date
+    if (date >= today) {
       setStartDate(date);
       console.log("Start Date Selected:", dateString);
     } else {
-      console.error("Invalid date format:", dateString);
+      console.error("Start Date cannot be in the past");
     }
   }}
   onTimeChange={(time) => {
     setStartTime(time);
     console.log("Start Time Selected:", time);
   }}
+  min={new Date().toISOString().split('T')[0]} // Set the min date to today
 />
 
 <DateTimePicker

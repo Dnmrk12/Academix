@@ -68,7 +68,7 @@ body {
   position: absolute;
   width: 1200px;
   top: 70px;
-  right: -80px;
+  right: -120px;
   rotate: -90deg;
   color: #F7FBFC;
   clip-path: inset(0 27.3% 27% 0);
@@ -79,7 +79,7 @@ body {
   font-size: 18px;
   color: #769FCD;
   margin-top: 90px;
-  margin-left: -100px;
+  margin-left: -70px;
   text-align: center;
   min-width: 250px;
 }
@@ -89,7 +89,7 @@ body {
   margin-bottom: 40px;
   margin-top: 20px;
 }
-
+/*
 .socialbutton {
   position: relative;
   align-items: center; 
@@ -106,7 +106,7 @@ body {
   right: 47px;
   color: #769FCD;
   cursor: pointer;
-  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+  transition: background-color 0.3s ease;  Smooth transition for hover effect 
 }
 
 .socialbutton:hover {
@@ -117,16 +117,15 @@ body {
   margin-bottom:-3px;
   margin-left:1px;
   height: 14px;
-  transition: color 0.3s ease; /* Smooth transition for icon color */
+  transition: color 0.3s ease; 
 }
 
 .socialbutton:hover .socialicon {
-  color: #769FCD; /* Ensure the icon changes color along with the button */
+  color: #769FCD;
+
+
+
 }
-
-
-
-/* Separator between social login and DYCI email login */
 .panghati::before{
   top: -19px;
   left: -50px;
@@ -151,7 +150,7 @@ body {
   bottom:25px;
   font-size: 9px;
 }
-
+*/
 /* Login form styles */
 .login-form {
   text-align: left;
@@ -173,8 +172,8 @@ body {
   outline: none;
   font-size: 13px;
   max-width: 130px;
-  margin-top: -40px;
-  margin-left: -50px;
+  margin-top: 50px;
+  margin-left: -70px;
   color: #769FCD;
 }
 
@@ -187,8 +186,8 @@ body {
   outline: none;
   font-size: 13px;
   max-width: 130px;
-  margin-top: -43px;
-  margin-left: 95px;
+  margin-top: -33px;
+  margin-left: 75px;
   color: #769FCD;
 }
 
@@ -211,7 +210,7 @@ body {
     outline: none;
     font-size: 13px;
     margin-top:15px;
-    margin-left: -50px;
+    margin-left: -70px;
 }
 
 .usernameinput{
@@ -225,7 +224,7 @@ body {
     outline: none;
     font-size: 13px;
     margin-top:-12px;
-    margin-left: -50px;
+    margin-left: -70px;
 }
 
 .passwordinput{
@@ -240,7 +239,7 @@ body {
     outline: none;
     font-size: 13px;
     margin-top:-12px;
-    margin-left: -50px;
+    margin-left: -70px;
 }
 
 .confirminput{
@@ -254,7 +253,7 @@ body {
   outline: none;
   font-size: 13px;
   margin-top:-12px;
-  margin-left: -50px;
+  margin-left: -70px;
 }
 
 .fieldinput::placeholder,
@@ -270,7 +269,7 @@ body {
 .iconinput {
   position: absolute;
   top: 14%;
-  left: -28px;
+  left: -50px;
   transform: translateY(-50%);
   color: #769FCD;
 }
@@ -306,7 +305,7 @@ label {
 
 /* Signup Button */
 .signup-button {
-    width: 104%;
+    width: 133%;
     padding: 8px;
     background-color: #2665AC;
     color: white;
@@ -315,7 +314,7 @@ label {
     font-size: 14px;
     cursor: pointer;
     margin-top: 10px;
-    margin-left:-50px;
+    margin-left:-67px;
 }
 
 .signup-button:hover {
@@ -325,7 +324,7 @@ label {
 /* Signup Text */
 .signtext {
     margin-top: 10px;
-    margin-left:-10px;
+    margin-left:-25px;
     font-size: 12px;
     color: #769FCD;
 }
@@ -410,7 +409,7 @@ label {
     position: absolute;
     width: 1200px;
     top: 70px;
-    right: -80px;
+    right: -120px;
     rotate: -90deg;
     color: #F7FBFC;
     clip-path: inset(0 27.3% 27% 0);
@@ -421,7 +420,7 @@ label {
     font-size: 18px;
     color: #769FCD;
     margin-top: 90px;
-    margin-left: -100px;
+    margin-left: -70px;
     text-align: center;
     min-width: 250px;
   }
@@ -431,7 +430,7 @@ label {
     margin-bottom: 40px;
     margin-top: 20px;
   }
-  
+  /*
   .socialbutton {
     position: relative;
     align-items: center; 
@@ -448,7 +447,7 @@ label {
     right: 47px;
     color: #769FCD;
     cursor: pointer;
-    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+    transition: background-color 0.3s ease;  Smooth transition for hover effect 
   }
   
   .socialbutton:hover {
@@ -459,16 +458,15 @@ label {
     margin-bottom:-3px;
     margin-left:1px;
     height: 14px;
-    transition: color 0.3s ease; /* Smooth transition for icon color */
+    transition: color 0.3s ease; 
   }
   
   .socialbutton:hover .socialicon {
-    color: #769FCD; /* Ensure the icon changes color along with the button */
+    color: #769FCD;
+  
+  
+  
   }
-  
-  
-  
-  /* Separator between social login and DYCI email login */
   .panghati::before{
     top: -19px;
     left: -50px;
@@ -493,7 +491,7 @@ label {
     bottom:25px;
     font-size: 9px;
   }
-  
+  */
   /* Login form styles */
   .login-form {
     text-align: left;
@@ -515,8 +513,8 @@ label {
     outline: none;
     font-size: 13px;
     max-width: 130px;
-    margin-top: -40px;
-    margin-left: -50px;
+    margin-top: 50px;
+    margin-left: -70px;
     color: #769FCD;
   }
   
@@ -529,8 +527,8 @@ label {
     outline: none;
     font-size: 13px;
     max-width: 130px;
-    margin-top: -43px;
-    margin-left: 95px;
+    margin-top: -33px;
+    margin-left: 75px;
     color: #769FCD;
   }
   
@@ -553,7 +551,7 @@ label {
       outline: none;
       font-size: 13px;
       margin-top:15px;
-      margin-left: -50px;
+      margin-left: -70px;
   }
   
   .usernameinput{
@@ -567,7 +565,7 @@ label {
       outline: none;
       font-size: 13px;
       margin-top:-12px;
-      margin-left: -50px;
+      margin-left: -70px;
   }
   
   .passwordinput{
@@ -582,7 +580,7 @@ label {
       outline: none;
       font-size: 13px;
       margin-top:-12px;
-      margin-left: -50px;
+      margin-left: -70px;
   }
   
   .confirminput{
@@ -596,7 +594,7 @@ label {
     outline: none;
     font-size: 13px;
     margin-top:-12px;
-    margin-left: -50px;
+    margin-left: -70px;
   }
   
   .fieldinput::placeholder,
@@ -612,7 +610,7 @@ label {
   .iconinput {
     position: absolute;
     top: 14%;
-    left: -28px;
+    left: -50px;
     transform: translateY(-50%);
     color: #769FCD;
   }
@@ -648,7 +646,7 @@ label {
   
   /* Signup Button */
   .signup-button {
-      width: 104%;
+      width: 133%;
       padding: 8px;
       background-color: #2665AC;
       color: white;
@@ -657,7 +655,7 @@ label {
       font-size: 14px;
       cursor: pointer;
       margin-top: 10px;
-      margin-left:-50px;
+      margin-left:-67px;
   }
   
   .signup-button:hover {
@@ -667,7 +665,7 @@ label {
   /* Signup Text */
   .signtext {
       margin-top: 10px;
-      margin-left:-10px;
+      margin-left:-25px;
       font-size: 12px;
       color: #769FCD;
   }

@@ -26,10 +26,15 @@ function Dashboard() {
   const [isScrumDropdownOpen, setIsScrumDropdownOpen] = useState(false);
   const activePage = location.pathname;
   const [isReportsDropdownOpen, setIsReportsDropdownOpen] = useState(false);
+  const [reportactivePage, setreportActivePage] = useState(window.location.pathname);
 
   const toggleReportsDropdown = () => {
     setIsReportsDropdownOpen(!isReportsDropdownOpen);
   };
+  useEffect(() => {
+    setreportActivePage(location.pathname);
+  }, [location]);
+
   useEffect(() => {
     // Check if we're in a backlogs page or any Scrum-related page and ensure dropdown is open
     if (
@@ -295,9 +300,29 @@ useEffect(() => {
 )}
 
 
-<li className={`sidebar-list-item ${activePage === "/reports" ? "active" : ""}`}>
-  <div onClick={toggleReportsDropdown} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
-    <img src={img5} alt="" className="dashboardicons" /> <span className="reportTab">Reports</span>
+<li
+  className={`sidebar-list-item ${
+    reportactivePage === "/reports" ? "active" : ""
+  }`}
+  onClick={toggleReportsDropdown}
+  style={{
+    cursor: "pointer",
+    ...(reportactivePage.startsWith("/performance-report") ||
+    reportactivePage.startsWith("/log-report")
+      ? { backgroundColor: "transparent" } // No highlight
+      : {}),
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      flexGrow: 1,
+      padding: "5px",
+    }}
+  >
+    <img src={img5} alt="" className="dashboardicons" />
+    <span className="reportTab">Reports</span>
     <svg
       className={`chevron-icon-report ${isReportsDropdownOpen ? "rotate" : ""}`}
       width="12"
@@ -306,22 +331,52 @@ useEffect(() => {
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      style={{ marginLeft: "auto" }}
     >
       <path d="M4 9l8 8 8-8" />
     </svg>
   </div>
-  {isReportsDropdownOpen && (
-    <ul  className={`reports-dropdown ${activePage === "/reports" ? "active" : ""}`}>
-      <li className={`sidebar-list-item ${activePage === "/reports" ? "active" : ""}`}>
-        <Link to="/performance-report"> <img src={PerfomRep} alt="" className="dashboardicons" />Performance Report</Link>
+  {(isReportsDropdownOpen ||
+    reportactivePage.startsWith("/performance-report") ||
+    reportactivePage.startsWith("/log-report")) && (
+    <ul className={`reports-dropdown active`}  style={{
+      textDecoration: 'none'
+    }}>
+      <li
+        className={`sidebar-list-item ${
+          reportactivePage.startsWith("/performance-report") ? "active" : ""
+        }`}
+      >
+        <Link
+          to="/performance-report"
+          onClick={() => {
+            setreportActivePage("/performance-report");
+            setIsReportsDropdownOpen(true); // Ensure dropdown remains open
+          }}
+        >
+          <img src={PerfomRep} alt="" className="dashboardicons" />
+          Performance Report
+        </Link>
       </li>
-      <li className={`sidebar-list-item ${activePage === "/reports" ? "active" : ""}`}>
-        <Link to="/log-report"> <img src={LogRep} alt="" className="dashboardicons" />Log Report</Link>
+      <li
+        className={`sidebar-list-item ${
+          reportactivePage.startsWith("/log-report") ? "active" : ""
+        }`}
+      >
+        <Link
+          to="/log-report"
+          onClick={() => {
+            setreportActivePage("/log-report");
+            setIsReportsDropdownOpen(true); // Ensure dropdown remains open
+          }}
+        >
+          <img src={LogRep} alt="" className="dashboardicons" />
+          Log Report
+        </Link>
       </li>
     </ul>
   )}
 </li>
+
       </ul>
     </aside>
   );

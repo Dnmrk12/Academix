@@ -19,7 +19,7 @@ body {
     grid-area: header;
     position: relative;
     right:69px;
-    width:105%;
+    width:1355px;
     height: 60px;
     display: flex;
     background-color: #ffffff;
@@ -399,6 +399,32 @@ box-shadow: 2px 2px 8px grey;
   font-weight: 400;
   z-index: 10;
 }
+
+
+.dropdown-notification-items {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto; 
+}
+
+.dropdown-notification-items::-webkit-scrollbar {
+  width: 10px; /* Vertical scrollbar width */
+  height: 10px; /* Horizontal scrollbar height */
+}
+  
+  .dropdown-notification-items::-webkit-scrollbar-track {
+    background: #B9D7EA;
+    border-radius: 8px;
+  }
+  
+  .dropdown-notification-items::-webkit-scrollbar-thumb {
+    background: #2665AC;
+    border-radius: 8px;
+  }
+  
+  .dropdown-notification-items::-webkit-scrollbar-thumb:hover {
+    background: #769FCD;
+  }
 
   @media screen and (max-width: 1500px){
    /* General styling for notification dropdown */
